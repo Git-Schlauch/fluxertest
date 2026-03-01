@@ -298,6 +298,22 @@ async function createIngress(params: {
 	}
 
 	const ingressClient = new IngressClient(toHttpUrl(params.endpoint), params.apiKey, params.apiSecret);
+	// livekit-server-sdk IngressClient may ignore URL path prefixes.
+	// When endpoint is proxied under "/livekit", force Twirp RPC prefix accordingly.
+	try {
+		const parsed = new URL(toHttpUrl(params.endpoint));
+		const pathPrefix = parsed.pathname.replace(/\/+$/, '');
+		if (pathPrefix) {
+			const client = ingressClient as {rpc?: {prefix?: string}};
+			const currentPrefix = client.rpc?.prefix;
+			if (typeof currentPrefix === 'string') {
+				client.rpc!.prefix = `${pathPrefix}${currentPrefix}`;
+			}
+		}
+	} catch {
+		// Keep default ingress client behavior if endpoint URL parsing fails.
+	}
+
 	const candidates: Array<{input: unknown; protocol: IngressProtocol}> = [];
 	const whipEnabled = isWhipEnabledForFfmpeg();
 	if (IngressInput['WHIP_INPUT'] !== undefined && whipEnabled) {

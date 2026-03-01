@@ -25,6 +25,8 @@ webhook_url=$(jq -r '.integrations.voice.webhook_url // "http://localhost:49319/
 webhook_url="${webhook_url/localhost/host.docker.internal}"
 webhook_url="${webhook_url/127.0.0.1/host.docker.internal}"
 base_domain=$(jq -r '.domain.base_domain // "localhost"' "$config_path")
+livekit_use_external_ip_override="${FLUXER_LIVEKIT_USE_EXTERNAL_IP:-}"
+livekit_node_ip_override="${FLUXER_LIVEKIT_NODE_IP:-}"
 
 is_local_domain=false
 case "$base_domain" in
@@ -46,6 +48,25 @@ else
 	else
 		livekit_use_external_ip="true"
 	fi
+fi
+
+# Optional LAN/public overrides for environments where the public hostname is used internally.
+# Example:
+#   FLUXER_LIVEKIT_USE_EXTERNAL_IP=false FLUXER_LIVEKIT_NODE_IP=10.0.1.9 devenv up
+if [ -n "$livekit_use_external_ip_override" ]; then
+	case "$livekit_use_external_ip_override" in
+	true | false)
+		livekit_use_external_ip="$livekit_use_external_ip_override"
+		;;
+	*)
+		echo "Invalid FLUXER_LIVEKIT_USE_EXTERNAL_IP value: $livekit_use_external_ip_override (expected true|false)" >&2
+		exit 1
+		;;
+	esac
+fi
+
+if [ -n "$livekit_node_ip_override" ]; then
+	livekit_node_ip="$livekit_node_ip_override"
 fi
 
 cat >"$livekit_cfg" <<EOF
