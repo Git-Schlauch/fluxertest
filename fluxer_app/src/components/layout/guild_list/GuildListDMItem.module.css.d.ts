@@ -1,0 +1,8 @@
+declare const styles: {
+  readonly "button": string;
+  readonly "fullSize": string;
+  readonly "muted": string;
+  readonly "relative": string;
+};
+export = styles;
+

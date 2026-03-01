@@ -1,0 +1,43 @@
+.subtitle {
+	margin: -10px 0 0;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--text-secondary);
+}
+
+.sourceLabel {
+	margin: var(--spacing-2) 0 0;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--text-tertiary);
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-2);
+}
+
+.hiddenInput {
+	display: none;
+}
+
+.successText {
+	margin: 0;
+	color: var(--status-positive);
+	font-size: 0.75rem;
+	line-height: 1.4;
+}
+
+.errorText {
+	margin: 0;
+	color: var(--status-danger);
+	font-size: 0.75rem;
+	line-height: 1.4;
+}

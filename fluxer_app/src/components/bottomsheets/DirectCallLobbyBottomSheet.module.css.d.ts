@@ -1,0 +1,34 @@
+declare const styles: {
+  readonly "actionButton": string;
+  readonly "actionButtons": string;
+  readonly "actionIcon": string;
+  readonly "actionIconSecondary": string;
+  readonly "actionText": string;
+  readonly "buttonRow": string;
+  readonly "callPreview": string;
+  readonly "connectionHeader": string;
+  readonly "connectionIdValue": string;
+  readonly "connectionInfo": string;
+  readonly "connectionStatusDot": string;
+  readonly "connectionStatusInfo": string;
+  readonly "connectionSubtitle": string;
+  readonly "connectionTitle": string;
+  readonly "container": string;
+  readonly "endpointValue": string;
+  readonly "fullWidth": string;
+  readonly "iconContainer": string;
+  readonly "iconContainerBrand": string;
+  readonly "iconContainerDanger": string;
+  readonly "iconContainerSuccess": string;
+  readonly "iconContainerTertiary": string;
+  readonly "maxWidth": string;
+  readonly "statLabel": string;
+  readonly "statRow": string;
+  readonly "statValue": string;
+  readonly "statValuePrimary": string;
+  readonly "statsGrid": string;
+  readonly "statusLabel": string;
+  readonly "statusRow": string;
+};
+export = styles;
+

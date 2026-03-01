@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# local dev / nix
+.devenv/
+.devenv.flake.nix
+
+# dependencies / build artifacts
+node_modules/
+**/node_modules/
+fluxer_gateway/_build/
+**/_build/
+**/dist/
+**/target/
+**/.turbo/
+**/.swc/
+**/.devserver-cache.json
+**/pkgs/
+*.tsbuildinfo
+
+# runtime data / logs
+dev/logs/
+dev/data/
+dump.rdb
+*.log
+
+# local machine config (contains secrets)
+config/config.json
+dev/*.pem

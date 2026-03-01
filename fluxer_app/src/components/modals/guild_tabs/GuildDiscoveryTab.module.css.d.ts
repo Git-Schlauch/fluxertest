@@ -1,0 +1,33 @@
+declare const styles: {
+  readonly "actions": string;
+  readonly "charCount": string;
+  readonly "container": string;
+  readonly "fieldLabel": string;
+  readonly "formCard": string;
+  readonly "header": string;
+  readonly "helpText": string;
+  readonly "info": string;
+  readonly "infoContent": string;
+  readonly "infoIcon": string;
+  readonly "infoText": string;
+  readonly "reviewReason": string;
+  readonly "spinnerContainer": string;
+  readonly "statusApproved": string;
+  readonly "statusBadge": string;
+  readonly "statusCard": string;
+  readonly "statusLabel": string;
+  readonly "statusPending": string;
+  readonly "statusRejected": string;
+  readonly "statusRemoved": string;
+  readonly "statusRow": string;
+  readonly "subtitle": string;
+  readonly "title": string;
+  readonly "warning": string;
+  readonly "warningBody": string;
+  readonly "warningContent": string;
+  readonly "warningIcon": string;
+  readonly "warningText": string;
+  readonly "warningTitle": string;
+};
+export = styles;
+

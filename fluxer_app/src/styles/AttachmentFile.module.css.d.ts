@@ -1,0 +1,33 @@
+declare const styles: {
+  readonly "attachmentContainer": string;
+  readonly "codeBlock": string;
+  readonly "container": string;
+  readonly "deleteButton": string;
+  readonly "downloadButton": string;
+  readonly "downloadButtonDisabled": string;
+  readonly "fileExtension": string;
+  readonly "fileInfoContainer": string;
+  readonly "fileName": string;
+  readonly "fileNameTruncate": string;
+  readonly "fileSize": string;
+  readonly "iconContainer": string;
+  readonly "previewContent": string;
+  readonly "previewContentInner": string;
+  readonly "previewContentLoading": string;
+  readonly "previewControlButton": string;
+  readonly "previewControls": string;
+  readonly "previewError": string;
+  readonly "previewFileSize": string;
+  readonly "previewFilename": string;
+  readonly "previewFooter": string;
+  readonly "previewFooterLeft": string;
+  readonly "previewLoadingState": string;
+  readonly "previewTruncationNote": string;
+  readonly "srOnly": string;
+  readonly "statusBadge": string;
+  readonly "statusIcon": string;
+  readonly "textualPreview": string;
+  readonly "wrapMode": string;
+};
+export = styles;
+

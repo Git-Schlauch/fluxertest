@@ -1,0 +1,39 @@
+port: 7880
+
+keys:
+  '22b25206d8d99ebf8734ac5354a83e773f67995bde8e0d4f4f7192eb2d1855e7': 'c6175eb25d77286c52fee2e31fc88e38a9fadb9fd8493be52be9ab31f9f4fa4e'
+
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 50100
+  use_external_ip: false
+  node_ip: 127.0.0.1
+
+turn:
+  enabled: true
+  domain: localhost
+  udp_port: 3478
+
+redis:
+  address: "livekit_redis:6379"
+  username: ""
+  password: ""
+  db: 0
+  use_tls: false
+
+ingress:
+  whip_base_url: "http://localhost:8080/whip"
+  rtmp_base_url: "rtmp://localhost:1935/live"
+
+webhook:
+  api_key: '22b25206d8d99ebf8734ac5354a83e773f67995bde8e0d4f4f7192eb2d1855e7'
+  urls:
+    - 'http://host.docker.internal:49319/api/webhooks/livekit'
+
+room:
+  auto_create: true
+  max_participants: 100
+  empty_timeout: 300
+
+development: true

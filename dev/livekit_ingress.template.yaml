@@ -1,0 +1,18 @@
+api_key: '{{API_KEY}}'
+api_secret: '{{API_SECRET}}'
+ws_url: '{{WS_URL}}'
+
+redis:
+  address: "{{REDIS_ADDRESS}}"
+  username: ""
+  password: ""
+  db: 0
+  use_tls: false
+
+rtmp_port: 1935
+whip_port: 8080
+health_port: 9091
+
+logging:
+  level: info
+  json: false

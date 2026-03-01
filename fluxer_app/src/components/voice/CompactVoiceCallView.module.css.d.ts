@@ -1,0 +1,37 @@
+declare const styles: {
+  readonly "audioAvatarLayout": string;
+  readonly "audioAvatarList": string;
+  readonly "container": string;
+  readonly "containerNoHeader": string;
+  readonly "containerResizing": string;
+  readonly "contentArea": string;
+  readonly "contentAreaAvatarsOnly": string;
+  readonly "controlBarInner": string;
+  readonly "controlBarSection": string;
+  readonly "controls": string;
+  readonly "expandButton": string;
+  readonly "floatingPiPContent": string;
+  readonly "floatingPiPDragHandle": string;
+  readonly "floatingPiPDragHandlePill": string;
+  readonly "floatingPiPLayer": string;
+  readonly "floatingPiPSurface": string;
+  readonly "floatingPiPSurfaceDragging": string;
+  readonly "fullscreenButtonWrap": string;
+  readonly "header": string;
+  readonly "headerContent": string;
+  readonly "iconSmall": string;
+  readonly "layoutHost": string;
+  readonly "moreVideos": string;
+  readonly "moreVideosText": string;
+  readonly "pulse": string;
+  readonly "resizeHandle": string;
+  readonly "resizePill": string;
+  readonly "statusContainer": string;
+  readonly "statusDot": string;
+  readonly "statusText": string;
+  readonly "videoContainer": string;
+  readonly "videoSection": string;
+  readonly "videoTile": string;
+};
+export = styles;
+

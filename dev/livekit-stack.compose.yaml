@@ -1,0 +1,35 @@
+services:
+  livekit_redis:
+    image: valkey/valkey:8.0.6-alpine
+    container_name: fluxer-livekit-redis
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
+
+  livekit:
+    image: livekit/livekit-server:v1.9.11
+    container_name: fluxer-livekit
+    command: ["--config", "/etc/livekit/livekit.yaml"]
+    volumes:
+      - ./livekit.docker.yaml:/etc/livekit/livekit.yaml:ro
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "3478:3478/udp"
+      - "50000-50100:50000-50100/udp"
+    restart: unless-stopped
+    depends_on:
+      - livekit_redis
+
+  livekit_ingress:
+    image: livekit/ingress:latest
+    container_name: fluxer-livekit-ingress
+    environment:
+      INGRESS_CONFIG_FILE: /etc/ingress/ingress.yaml
+    volumes:
+      - ./livekit_ingress.docker.yaml:/etc/ingress/ingress.yaml:ro
+    ports:
+      - "1935:1935"
+    restart: unless-stopped
+    depends_on:
+      - livekit
+      - livekit_redis

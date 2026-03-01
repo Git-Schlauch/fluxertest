@@ -1,0 +1,37 @@
+declare const styles: {
+  readonly "actionButton": string;
+  readonly "container": string;
+  readonly "controls": string;
+  readonly "controlsLeft": string;
+  readonly "controlsRight": string;
+  readonly "fileExtension": string;
+  readonly "fileInfo": string;
+  readonly "fileMeta": string;
+  readonly "fileName": string;
+  readonly "fileNameTruncate": string;
+  readonly "header": string;
+  readonly "loadingSpinner": string;
+  readonly "loadingSpinnerDesktop": string;
+  readonly "mobileContainer": string;
+  readonly "mobileContainerActive": string;
+  readonly "mobileContent": string;
+  readonly "mobileFileInfo": string;
+  readonly "mobileFileMeta": string;
+  readonly "mobileFileName": string;
+  readonly "mobilePlayButton": string;
+  readonly "mobileProgressContainer": string;
+  readonly "mobileProgressFill": string;
+  readonly "mobileProgressFillActive": string;
+  readonly "mobileProgressTrack": string;
+  readonly "mobileProgressTrackActive": string;
+  readonly "mobileTimestamp": string;
+  readonly "playButton": string;
+  readonly "playButtonIcon": string;
+  readonly "progressBar": string;
+  readonly "progressSection": string;
+  readonly "spin": string;
+  readonly "time": string;
+  readonly "volumeControl": string;
+};
+export = styles;
+

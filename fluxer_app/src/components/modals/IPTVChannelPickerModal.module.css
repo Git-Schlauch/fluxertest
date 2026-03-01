@@ -1,0 +1,30 @@
+.errorMessage {
+	margin: var(--spacing-2) 0 0;
+	color: var(--status-danger);
+	font-size: 0.75rem;
+	line-height: 1.4;
+}
+
+.itemStarting {
+	animation: itemStartingPulse 180ms ease-out;
+}
+
+.selectedBadge {
+	margin-left: auto;
+	color: var(--text-link);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 600;
+}
+
+@keyframes itemStartingPulse {
+	0% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(0.985);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
