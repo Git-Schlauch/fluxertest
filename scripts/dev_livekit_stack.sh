@@ -24,6 +24,29 @@ api_secret=$(jq -r '.integrations.voice.api_secret // "devsecret"' "$config_path
 webhook_url=$(jq -r '.integrations.voice.webhook_url // "http://localhost:49319/api/webhooks/livekit"' "$config_path")
 webhook_url="${webhook_url/localhost/host.docker.internal}"
 webhook_url="${webhook_url/127.0.0.1/host.docker.internal}"
+base_domain=$(jq -r '.domain.base_domain // "localhost"' "$config_path")
+
+is_local_domain=false
+case "$base_domain" in
+localhost | 127.0.0.1 | ::1 | "[::1]")
+	is_local_domain=true
+	;;
+esac
+
+if [ "$is_local_domain" = true ]; then
+	livekit_node_ip="127.0.0.1"
+	livekit_turn_domain="localhost"
+	livekit_use_external_ip="false"
+else
+	livekit_node_ip="$base_domain"
+	livekit_turn_domain="$base_domain"
+	# For literal IPs (common in LAN testing), keep host candidates as-is.
+	if [[ "$base_domain" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "$base_domain" == *:* ]]; then
+		livekit_use_external_ip="false"
+	else
+		livekit_use_external_ip="true"
+	fi
+fi
 
 cat >"$livekit_cfg" <<EOF
 port: 7880
@@ -35,12 +58,12 @@ rtc:
   tcp_port: 7881
   port_range_start: 50000
   port_range_end: 50100
-  use_external_ip: false
-  node_ip: 127.0.0.1
+  use_external_ip: $livekit_use_external_ip
+  node_ip: $livekit_node_ip
 
 turn:
   enabled: true
-  domain: localhost
+  domain: $livekit_turn_domain
   udp_port: 3478
 
 redis:
