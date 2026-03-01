@@ -27,3 +27,6 @@ dump.rdb
 # local machine config (contains secrets)
 config/config.json
 dev/*.pem
+
+fluxer_server/data/*.db-shm
+fluxer_server/data/*.db-wal
