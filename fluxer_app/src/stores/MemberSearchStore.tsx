@@ -18,6 +18,7 @@
  */
 
 import {Logger} from '@app/lib/Logger';
+import {generateUUID} from '@app/lib/CryptoUtils';
 import type {GuildMemberRecord} from '@app/records/GuildMemberRecord';
 import type {GuildRecord} from '@app/records/GuildRecord';
 import GuildMemberStore from '@app/stores/GuildMemberStore';
@@ -172,7 +173,7 @@ export class SearchContext {
 	private readonly _handleMessages: (event: MessageEvent<WorkerMessage>) => void;
 
 	constructor(callback: (results: Array<TransformedMember>) => void, limit: number = DEFAULT_LIMIT) {
-		this._uuid = crypto.randomUUID();
+		this._uuid = generateUUID();
 		this._callback = callback;
 		this._limit = limit;
 		this._currentQuery = null;

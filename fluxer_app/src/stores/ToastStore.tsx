@@ -18,6 +18,7 @@
  */
 
 import type {ToastProps} from '@app/components/uikit/toast';
+import {generateUUID} from '@app/lib/CryptoUtils';
 import {Logger} from '@app/lib/Logger';
 import {makeAutoObservable, observable} from 'mobx';
 
@@ -42,7 +43,7 @@ class ToastStore {
 	}
 
 	createToast(data: ToastProps): string {
-		const id = crypto.randomUUID();
+		const id = generateUUID();
 		logger.debug(`Creating toast: ${id}, type: ${data.type}`);
 		this.currentToast = {id, data};
 		return id;
