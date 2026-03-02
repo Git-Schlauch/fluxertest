@@ -100,6 +100,25 @@
 	transition: left 1500ms ease-out;
 }
 
+.meterGateThreshold {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background-color: rgb(245 158 11 / 85%);
+	pointer-events: none;
+}
+
+.meterGateLabel {
+	position: absolute;
+	top: -1.2rem;
+	left: 0.35rem;
+	font-size: 0.625rem;
+	font-weight: 600;
+	color: rgb(245 158 11);
+	white-space: nowrap;
+}
+
 .helpText {
 	color: var(--text-primary-muted);
 	font-size: 0.75rem;

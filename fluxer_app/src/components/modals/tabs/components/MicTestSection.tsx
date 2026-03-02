@@ -34,6 +34,7 @@ interface MicTestSectionProps {
 		echoCancellation: boolean;
 		noiseSuppression: boolean;
 		autoGainControl: boolean;
+		noiseGateThresholdDb: number;
 	};
 }
 
@@ -78,6 +79,17 @@ export const MicTestSection: React.FC<MicTestSectionProps> = observer(({settings
 		if (percentage < 60) return t`Good`;
 		if (percentage < 85) return t`Optimal`;
 		return t`Too Loud`;
+	};
+
+	const getNoiseGateThresholdPercentage = () => {
+		const thresholdDb = settings.noiseGateThresholdDb;
+		if (thresholdDb <= -90) return null;
+
+		const minDb = -60;
+		const maxDb = 0;
+		const clampedLevel = Math.max(minDb, Math.min(maxDb, thresholdDb));
+		const percentage = ((clampedLevel - minDb) / (maxDb - minDb)) * 100;
+		return Math.round(percentage);
 	};
 
 	return (
@@ -131,12 +143,23 @@ export const MicTestSection: React.FC<MicTestSectionProps> = observer(({settings
 									left: `${getPeakLevelPercentage()}%`,
 								}}
 							/>
+							{getNoiseGateThresholdPercentage() !== null && (
+								<div
+									className={styles.meterGateThreshold}
+									style={{
+										left: `${getNoiseGateThresholdPercentage()}%`,
+									}}
+								>
+									<span className={styles.meterGateLabel}>{`Gate ${Math.round(settings.noiseGateThresholdDb)} dB`}</span>
+								</div>
+							)}
 						</div>
 
 						<p className={styles.helpText}>
 							<Trans>
 								Speak normally into your microphone. You should hear yourself through your speakers. The level should
-								stay in the green "Good" or yellow "Optimal" range.
+								stay in the green "Good" or yellow "Optimal" range. If a noise gate is enabled, only audio above the
+								threshold will be transmitted.
 							</Trans>
 						</p>
 					</div>

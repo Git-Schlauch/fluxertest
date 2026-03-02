@@ -30,6 +30,7 @@ export function update(
 		echoCancellation: boolean;
 		noiseSuppression: boolean;
 		autoGainControl: boolean;
+		noiseGateThresholdDb: number;
 		cameraResolution: 'low' | 'medium' | 'high';
 		screenshareResolution: 'low' | 'medium' | 'high' | 'ultra' | '4k';
 		videoFrameRate: number;
@@ -54,6 +55,9 @@ export function update(
 		MediaEngineStore.applyAllLocalAudioPreferences();
 	}
 	if (settings.inputVolume !== undefined) {
+		MediaEngineStore.applyLocalInputVolume();
+	}
+	if (settings.noiseGateThresholdDb !== undefined) {
 		MediaEngineStore.applyLocalInputVolume();
 	}
 }

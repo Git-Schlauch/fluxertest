@@ -43,6 +43,7 @@ type VoiceSettingsUpdate = Partial<{
 	echoCancellation: boolean;
 	noiseSuppression: boolean;
 	autoGainControl: boolean;
+	noiseGateThresholdDb: number;
 	cameraResolution: CameraResolution;
 	screenshareResolution: ScreenshareResolution;
 	videoFrameRate: number;
@@ -71,6 +72,7 @@ class VoiceSettingsStore {
 	echoCancellation = true;
 	noiseSuppression = true;
 	autoGainControl = true;
+	noiseGateThresholdDb = -90;
 	cameraResolution: CameraResolution = 'medium';
 	screenshareResolution: ScreenshareResolution = 'medium';
 	videoFrameRate = 30;
@@ -101,6 +103,7 @@ class VoiceSettingsStore {
 				getEchoCancellation: false,
 				getNoiseSuppression: false,
 				getAutoGainControl: false,
+				getNoiseGateThresholdDb: false,
 				getCameraResolution: false,
 				getScreenshareResolution: false,
 				getVideoFrameRate: false,
@@ -134,6 +137,7 @@ class VoiceSettingsStore {
 			'echoCancellation',
 			'noiseSuppression',
 			'autoGainControl',
+			'noiseGateThresholdDb',
 			'cameraResolution',
 			'screenshareResolution',
 			'videoFrameRate',
@@ -252,6 +256,10 @@ class VoiceSettingsStore {
 		return this.autoGainControl;
 	}
 
+	getNoiseGateThresholdDb(): number {
+		return this.noiseGateThresholdDb;
+	}
+
 	getCameraResolution(): CameraResolution {
 		return this.cameraResolution;
 	}
@@ -331,6 +339,7 @@ class VoiceSettingsStore {
 		if (validated.echoCancellation !== undefined) this.echoCancellation = validated.echoCancellation;
 		if (validated.noiseSuppression !== undefined) this.noiseSuppression = validated.noiseSuppression;
 		if (validated.autoGainControl !== undefined) this.autoGainControl = validated.autoGainControl;
+		if (validated.noiseGateThresholdDb !== undefined) this.noiseGateThresholdDb = validated.noiseGateThresholdDb;
 		if (validated.cameraResolution !== undefined) this.cameraResolution = validated.cameraResolution;
 		if (validated.screenshareResolution !== undefined) this.screenshareResolution = validated.screenshareResolution;
 		if (validated.videoFrameRate !== undefined) this.videoFrameRate = validated.videoFrameRate;
@@ -402,6 +411,7 @@ class VoiceSettingsStore {
 			echoCancellation: data.echoCancellation ?? this.echoCancellation,
 			noiseSuppression: data.noiseSuppression ?? this.noiseSuppression,
 			autoGainControl: data.autoGainControl ?? this.autoGainControl,
+			noiseGateThresholdDb: Math.max(-90, Math.min(-10, data.noiseGateThresholdDb ?? this.noiseGateThresholdDb)),
 			cameraResolution,
 			screenshareResolution,
 			videoFrameRate: Math.max(15, Math.min(60, videoFrameRate)),

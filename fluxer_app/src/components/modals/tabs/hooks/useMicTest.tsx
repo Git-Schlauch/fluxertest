@@ -36,7 +36,10 @@ interface MicTestSettings {
 	echoCancellation: boolean;
 	noiseSuppression: boolean;
 	autoGainControl: boolean;
+	noiseGateThresholdDb: number;
 }
+
+const NOISE_GATE_RELEASE_HOLD_MS = 140;
 
 export const useMicTest = (settings: MicTestSettings) => {
 	const [isTesting, setIsTesting] = useState(false);
@@ -56,6 +59,8 @@ export const useMicTest = (settings: MicTestSettings) => {
 	const byteSampleBufferRef = useRef<Uint8Array | null>(null);
 	const peakDecayRef = useRef<number>(-Infinity);
 	const peakHoldTimeRef = useRef<number>(0);
+	const gateIsOpenRef = useRef<boolean>(true);
+	const gateLastAboveThresholdAtRef = useRef<number>(0);
 
 	const micExplicitlyDenied = MediaPermissionStore.microphoneExplicitlyDenied;
 
@@ -110,8 +115,31 @@ export const useMicTest = (settings: MicTestSettings) => {
 		const level = calculateLevel();
 		setMicLevel(level);
 		setPeakLevel(peakDecayRef.current);
+
+		const gainNode = gainNodeRef.current;
+		if (gainNode && Number.isFinite(level)) {
+			const now = Date.now();
+			const gateThresholdDb = settings.noiseGateThresholdDb;
+			const gateDisabled = gateThresholdDb <= -90;
+			const openThresholdDb = gateThresholdDb + 2;
+
+			if (gateDisabled) {
+				gateIsOpenRef.current = true;
+			} else if (level >= openThresholdDb) {
+				gateIsOpenRef.current = true;
+				gateLastAboveThresholdAtRef.current = now;
+			} else if (level < gateThresholdDb && now - gateLastAboveThresholdAtRef.current > NOISE_GATE_RELEASE_HOLD_MS) {
+				gateIsOpenRef.current = false;
+			}
+
+			const targetGain = (settings.inputVolume / 100) * (gateIsOpenRef.current ? 1 : 0);
+			const ctxTime = audioContextRef.current?.currentTime ?? 0;
+			gainNode.gain.cancelScheduledValues(ctxTime);
+			gainNode.gain.setTargetAtTime(targetGain, ctxTime, 0.01);
+		}
+
 		animationFrameRef.current = requestAnimationFrame(drawLoop);
-	}, [calculateLevel]);
+	}, [calculateLevel, settings.inputVolume, settings.noiseGateThresholdDb]);
 
 	const stop = useCallback(() => {
 		if (animationFrameRef.current) {
@@ -159,6 +187,8 @@ export const useMicTest = (settings: MicTestSettings) => {
 		byteSampleBufferRef.current = null;
 		peakDecayRef.current = -Infinity;
 		peakHoldTimeRef.current = 0;
+		gateIsOpenRef.current = true;
+		gateLastAboveThresholdAtRef.current = 0;
 
 		setIsTesting(false);
 		setMicLevel(-Infinity);

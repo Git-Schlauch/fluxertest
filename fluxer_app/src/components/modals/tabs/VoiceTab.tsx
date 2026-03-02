@@ -63,6 +63,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		echoCancellation,
 		noiseSuppression,
 		autoGainControl,
+		noiseGateThresholdDb,
 		voiceRoomChatMessageLimit,
 		voiceRoomChatMessageTtlMinutes,
 	} = voiceSettings;
@@ -428,6 +429,24 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							value={autoGainControl}
 							onChange={(value) => VoiceSettingsActionCreators.update({autoGainControl: value})}
 						/>
+						<div>
+							<div className={styles.sliderLabel}>
+								<Trans>Noise Gate Threshold</Trans>
+							</div>
+							<Slider
+								value={noiseGateThresholdDb}
+								defaultValue={noiseGateThresholdDb}
+								factoryDefaultValue={-90}
+								minValue={-90}
+								maxValue={-10}
+								step={1}
+								markers={[-90, -70, -60, -50, -40, -30, -20, -10]}
+								stickToMarkers={false}
+								onMarkerRender={(value) => `${Math.round(value)} dB`}
+								onValueRender={(value) => (value <= -90 ? t`Disabled` : `${Math.round(value)} dB`)}
+								onValueChange={(value) => VoiceSettingsActionCreators.update({noiseGateThresholdDb: value})}
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
