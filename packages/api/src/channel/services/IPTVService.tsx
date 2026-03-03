@@ -398,6 +398,77 @@ async function deleteIngress(ingressClient: unknown, ingressId: string): Promise
 
 function spawnFfmpeg(sourceUrl: string, targetUrl: string, protocol: IngressProtocol): ChildProcessWithoutNullStreams {
 	const ffmpegPath = process.env.FLUXER_IPTV_FFMPEG_PATH ?? 'ffmpeg';
+	const videoCodec = (process.env.FLUXER_IPTV_VIDEO_CODEC ?? 'libx264').trim().toLowerCase();
+	const vaapiDevice = process.env.FLUXER_IPTV_VAAPI_DEVICE?.trim() || '/dev/dri/renderD128';
+	const isHttpSource = /^https?:\/\//i.test(sourceUrl);
+	const userAgent = process.env.FLUXER_IPTV_FFMPEG_USER_AGENT?.trim();
+	const referer = process.env.FLUXER_IPTV_FFMPEG_REFERER?.trim();
+	const rawHeaders = process.env.FLUXER_IPTV_FFMPEG_HEADERS?.trim();
+	const normalizedHeaders = rawHeaders
+		? rawHeaders
+				.split('\n')
+				.map((line) => line.trim())
+				.filter((line) => line.length > 0)
+				.join('\r\n')
+		: '';
+	const inputHeaderArgs: Array<string> = [];
+
+	if (isHttpSource && userAgent) {
+		inputHeaderArgs.push('-user_agent', userAgent);
+	}
+	if (isHttpSource && referer) {
+		inputHeaderArgs.push('-referer', referer);
+	}
+	if (isHttpSource && normalizedHeaders) {
+		inputHeaderArgs.push('-headers', `${normalizedHeaders}\r\n`);
+	}
+
+	const preInputArgs: Array<string> = [];
+	if (videoCodec === 'h264_vaapi') {
+		preInputArgs.push('-vaapi_device', vaapiDevice);
+	}
+
+	const videoArgs =
+		videoCodec === 'h264_vaapi'
+			? [
+					'-vf',
+					'format=nv12,hwupload',
+					'-c:v',
+					'h264_vaapi',
+					'-profile:v',
+					'high',
+					'-level:v',
+					'4.1',
+					'-b:v',
+					process.env.FLUXER_IPTV_VAAPI_BITRATE ?? '2500k',
+					'-maxrate',
+					process.env.FLUXER_IPTV_VAAPI_MAXRATE ?? '3000k',
+					'-bufsize',
+					process.env.FLUXER_IPTV_VAAPI_BUFSIZE ?? '6000k',
+					'-g',
+					'60',
+					'-keyint_min',
+					'60',
+					'-bf',
+					'0',
+				]
+			: [
+					'-c:v',
+					'libx264',
+					'-preset',
+					process.env.FLUXER_IPTV_X264_PRESET ?? 'veryfast',
+					'-tune',
+					'zerolatency',
+					'-pix_fmt',
+					'yuv420p',
+					'-g',
+					'60',
+					'-keyint_min',
+					'60',
+					'-sc_threshold',
+					'0',
+				];
+
 	const baseArgs = [
 		'-hide_banner',
 		'-loglevel',
@@ -408,26 +479,15 @@ function spawnFfmpeg(sourceUrl: string, targetUrl: string, protocol: IngressProt
 		'1',
 		'-reconnect_delay_max',
 		'10',
+		...preInputArgs,
+		...inputHeaderArgs,
 		'-i',
 		sourceUrl,
 		'-map',
 		'0:v:0',
 		'-map',
 		'0:a:0?',
-		'-c:v',
-		'libx264',
-		'-preset',
-		'veryfast',
-		'-tune',
-		'zerolatency',
-		'-pix_fmt',
-		'yuv420p',
-		'-g',
-		'60',
-		'-keyint_min',
-		'60',
-		'-sc_threshold',
-		'0',
+		...videoArgs,
 		'-c:a',
 		'aac',
 		'-b:a',
