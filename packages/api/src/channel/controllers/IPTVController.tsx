@@ -36,10 +36,23 @@ const IPTVStartDirectBodySchema = z.object({
 
 const IPTVStartPlaylistBodySchema = z
 	.object({
-		channel_name: z.string().trim().min(1).max(200),
+		channel_name: z.string().trim().min(1).max(500).optional(),
+		channelName: z.string().trim().min(1).max(500).optional(),
 		playlist: z.string().trim().min(1).optional(),
 		playlist_url: z.string().url().optional(),
+		playlistUrl: z.string().url().optional(),
 		stream_name: z.string().trim().min(1).max(120).optional(),
+		streamName: z.string().trim().min(1).max(120).optional(),
+	})
+	.transform((data) => ({
+		channel_name: data.channel_name ?? data.channelName,
+		playlist: data.playlist,
+		playlist_url: data.playlist_url ?? data.playlistUrl,
+		stream_name: data.stream_name ?? data.streamName,
+	}))
+	.refine((data) => data.channel_name !== undefined, {
+		message: 'channel_name is required',
+		path: ['channel_name'],
 	})
 	.refine((data) => data.playlist !== undefined || data.playlist_url !== undefined, {
 		message: 'playlist or playlist_url is required',
@@ -61,10 +74,21 @@ const IPTVConfiguredListQuerySchema = z.object({
 	limit: z.coerce.number().int().min(1).max(5000).optional(),
 });
 
-const IPTVStartConfiguredBodySchema = z.object({
-	channel_name: z.string().trim().min(1).max(200),
-	stream_name: z.string().trim().min(1).max(120).optional(),
-});
+const IPTVStartConfiguredBodySchema = z
+	.object({
+		channel_name: z.string().trim().min(1).max(500).optional(),
+		channelName: z.string().trim().min(1).max(500).optional(),
+		stream_name: z.string().trim().min(1).max(120).optional(),
+		streamName: z.string().trim().min(1).max(120).optional(),
+	})
+	.transform((data) => ({
+		channel_name: data.channel_name ?? data.channelName,
+		stream_name: data.stream_name ?? data.streamName,
+	}))
+	.refine((data) => data.channel_name !== undefined, {
+		message: 'channel_name is required',
+		path: ['channel_name'],
+	});
 
 const IPTVStatusResponseSchema = z.object({
 	active: z.boolean(),
