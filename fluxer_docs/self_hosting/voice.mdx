@@ -3,4 +3,54 @@ title: 'Voice setup'
 description: 'Configure voice chat with LiveKit.'
 ---
 
-TBD
+For local development Fluxer starts a LiveKit stack from `dev/livekit-stack.compose.yaml`.
+
+## LAN + WAN connectivity (split DNS)
+
+Use split DNS so LAN clients resolve your public Fluxer domain directly to the LAN IP of the host machine, while public DNS remains unchanged for internet clients.
+
+- LAN DNS: `fluxer.example.com -> 10.0.1.15`
+- Public DNS: keep your normal public record
+
+Then set local overrides in `devenv.local.nix`:
+
+```nix
+{ ... }:
+{
+  env = {
+    # Keep external candidates enabled for internet users
+    FLUXER_LIVEKIT_USE_EXTERNAL_IP = "true";
+    # Advertise a reachable LAN host candidate for local clients
+    FLUXER_LIVEKIT_NODE_IP = "10.0.1.15";
+  };
+}
+```
+
+Restart your stack:
+
+```bash
+devenv processes down
+devenv up --detach
+```
+
+## Required ports
+
+Expose these on the LiveKit host:
+
+- `7880/tcp` (LiveKit HTTP/WS signaling)
+- `7881/tcp` (ICE TCP fallback)
+- `3478/udp` (TURN/STUN)
+- `50000-50100/udp` (RTP media)
+
+## Linux Docker note
+
+LiveKit webhook callbacks often target `host.docker.internal` in dev. On Linux, this hostname is not always available by default.
+
+`dev/livekit-stack.compose.yaml` includes:
+
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+
+This maps `host.docker.internal` to the host gateway so webhook callbacks can reach the API process.

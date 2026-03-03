@@ -11,6 +11,8 @@ services:
     command: ["--config", "/etc/livekit/livekit.yaml"]
     volumes:
       - ./livekit.docker.yaml:/etc/livekit/livekit.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "7880:7880"
       - "7881:7881"
