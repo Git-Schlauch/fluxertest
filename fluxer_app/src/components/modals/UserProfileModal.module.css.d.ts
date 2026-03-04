@@ -10,6 +10,7 @@ declare const styles: {
   readonly "bannerMask": string;
   readonly "buttonIcon": string;
   readonly "contentContainer": string;
+  readonly "contentContainerWithEffect": string;
   readonly "customStatusRow": string;
   readonly "customStatusText": string;
   readonly "emptyState": string;
@@ -40,7 +41,10 @@ declare const styles: {
   readonly "profileContent": string;
   readonly "profileContentHeader": string;
   readonly "profileContentWrapper": string;
+  readonly "profileContentWrapperWithEffect": string;
   readonly "profileDataWarning": string;
+  readonly "profileEffectBackground": string;
+  readonly "profileEffectOverlay": string;
   readonly "pronouns": string;
   readonly "scrollerFullHeight": string;
   readonly "separator": string;

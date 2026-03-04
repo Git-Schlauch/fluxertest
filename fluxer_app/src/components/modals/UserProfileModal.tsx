@@ -40,7 +40,6 @@ import {UserProfileDataWarning} from '@app/components/popouts/UserProfileDataWar
 import {
 	UserProfileBio,
 	UserProfileConnections,
-	UserProfileEffectMedia,
 	UserProfileMembershipInfo,
 	UserProfileRoles,
 } from '@app/components/popouts/UserProfileShared';
@@ -150,7 +149,6 @@ interface ProfileContentProps {
 	profile: ProfileRecord;
 	user: UserRecord;
 	userNote: string | null;
-	profileEffectUrl?: string | null;
 	autoFocusNote?: boolean;
 	noteRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
@@ -264,7 +262,7 @@ const UserNoteEditor: React.FC<UserNoteEditorProps> = observer(({userId, initial
 });
 
 const ProfileContent: React.FC<ProfileContentProps> = observer(
-	({profile, user, userNote, profileEffectUrl, autoFocusNote, noteRef}) => {
+	({profile, user, userNote, autoFocusNote, noteRef}) => {
 		const guildMember = GuildMemberStore.getMember(profile?.guildId ?? '', user.id);
 		const memberRoles = profile?.guildId && guildMember ? guildMember.getSortedRoles() : [];
 		const canManageRoles = PermissionStore.can(Permissions.MANAGE_ROLES, {guildId: profile?.guild?.id});
@@ -277,7 +275,6 @@ const ProfileContent: React.FC<ProfileContentProps> = observer(
 			<div className={userProfileModalStyles.profileContent}>
 				<div className={userProfileModalStyles.profileContentHeader}>
 					<VoiceActivitySection userId={user.id} onNavigate={handleNavigate} showAllActivities={true} />
-					<UserProfileEffectMedia mediaUrl={profileEffectUrl} />
 					<UserProfileBio profile={profile} />
 					<UserProfileMembershipInfo profile={profile} user={user} />
 					<UserProfileRoles
@@ -659,7 +656,6 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 							profile={profile}
 							user={user}
 							userNote={userNote}
-							profileEffectUrl={profileEffectUrl}
 							autoFocusNote={autoFocusNote}
 							noteRef={noteRef}
 						/>
@@ -704,7 +700,20 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 					</div>
 				</header>
 
-				<div className={userProfileModalStyles.contentContainer}>
+				<div
+					className={clsx(
+						userProfileModalStyles.contentContainer,
+						profileEffectUrl && userProfileModalStyles.contentContainerWithEffect,
+					)}
+				>
+					{profileEffectUrl && (
+						<div
+							className={userProfileModalStyles.profileEffectBackground}
+							style={{backgroundImage: `url("${profileEffectUrl.replace(/"/g, '\\"')}")`}}
+							aria-hidden="true"
+						/>
+					)}
+					{profileEffectUrl && <div className={userProfileModalStyles.profileEffectOverlay} aria-hidden="true" />}
 					<UserInfo
 						user={user}
 						profile={profile}
@@ -748,7 +757,12 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 						<div className={userProfileModalStyles.separator} />
 					)}
 
-					<div className={userProfileModalStyles.profileContentWrapper}>
+					<div
+						className={clsx(
+							userProfileModalStyles.profileContentWrapper,
+							profileEffectUrl && userProfileModalStyles.profileContentWrapperWithEffect,
+						)}
+					>
 						<Scroller className={userProfileModalStyles.scrollerFullHeight} key="user-profile-modal-content-scroller">
 							{renderActiveTabContent()}
 						</Scroller>

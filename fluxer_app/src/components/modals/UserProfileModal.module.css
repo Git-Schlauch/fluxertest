@@ -251,6 +251,8 @@
 }
 
 .contentContainer {
+	position: relative;
+	isolation: isolate;
 	z-index: 1;
 	margin: 16px;
 	display: flex;
@@ -262,6 +264,40 @@
 	overflow: hidden;
 }
 
+.contentContainerWithEffect {
+	background-color: transparent;
+}
+
+.profileEffectBackground {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+.profileEffectOverlay {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background:
+		linear-gradient(
+			to bottom,
+			rgb(0 0 0 / 0.45) 0%,
+			rgb(0 0 0 / 0.58) 24%,
+			rgb(0 0 0 / 0.72) 52%,
+			rgb(0 0 0 / 0.84) 100%
+		);
+}
+
+.contentContainerWithEffect > :not(.profileEffectBackground):not(.profileEffectOverlay) {
+	position: relative;
+	z-index: 2;
+}
+
 .profileContentWrapper {
 	flex: 1;
 	min-height: 0;
@@ -271,6 +307,10 @@
 	flex-direction: column;
 	border-radius: 6px;
 	background-color: var(--background-primary);
+}
+
+.profileContentWrapperWithEffect {
+	background-color: transparent;
 }
 
 .scrollerFullHeight {
