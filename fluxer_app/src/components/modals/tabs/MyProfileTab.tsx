@@ -38,6 +38,7 @@ import {type BannerMode, BannerUploader} from '@app/components/modals/tabs/my_pr
 import {BioEditor} from '@app/components/modals/tabs/my_profile_tab/BioEditor';
 import {PerGuildPremiumUpsell} from '@app/components/modals/tabs/my_profile_tab/PerGuildPremiumUpsell';
 import {PremiumBadgeSettings} from '@app/components/modals/tabs/my_profile_tab/PremiumBadgeSettings';
+import {ProfileEffectUploader} from '@app/components/modals/tabs/my_profile_tab/ProfileEffectUploader';
 import {ProfileTypeSelector} from '@app/components/modals/tabs/my_profile_tab/ProfileTypeSelector';
 import {UsernameSection} from '@app/components/modals/tabs/my_profile_tab/UsernameSection';
 import {ProfilePreview} from '@app/components/profile/ProfilePreview';
@@ -70,6 +71,7 @@ const logger = new Logger('MyProfileTab');
 interface FormInputs {
 	avatar?: string | null;
 	banner?: string | null;
+	profile_effect?: string | null;
 	bio: string | null;
 	global_name: string | null;
 	pronouns: string | null;
@@ -101,6 +103,8 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(null);
 	const [hasClearedBanner, setHasClearedBanner] = useState(false);
 	const [previewBannerUrl, setPreviewBannerUrl] = useState<string | null>(null);
+	const [hasClearedProfileEffect, setHasClearedProfileEffect] = useState(false);
+	const [previewProfileEffectUrl, setPreviewProfileEffectUrl] = useState<string | null>(null);
 	const bioTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
 	const isPerGuildProfile = selectedGuildId !== null;
@@ -179,6 +183,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			premium_badge_timestamp_hidden: false,
 			premium_badge_masked: false,
 			premium_badge_sequence_hidden: false,
+			profile_effect: null,
 		},
 	});
 
@@ -231,6 +236,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				pronouns: pronouns,
 				accent_color: typeof accentColor === 'number' ? accentColor : null,
 				nick: guildMember?.nick || null,
+				profile_effect: user.profileEffect || null,
 			});
 
 			setHasCustomAvatar(guildMember?.avatar !== null && !guildMember?.isAvatarUnset());
@@ -266,6 +272,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				pronouns: user.pronouns || null,
 				accent_color: typeof user.accentColor === 'number' ? user.accentColor : null,
 				nick: null,
+				profile_effect: user.profileEffect || null,
 				premium_badge_hidden: user.premiumBadgeHidden ?? false,
 				premium_badge_timestamp_hidden: user.premiumBadgeTimestampHidden ?? false,
 				premium_badge_masked: user.premiumBadgeMasked ?? false,
@@ -288,12 +295,21 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		setPreviewAvatarUrl(null);
 		setHasClearedBanner(false);
 		setPreviewBannerUrl(null);
+		setHasClearedProfileEffect(false);
+		setPreviewProfileEffectUrl(null);
 	}, [isPerGuildProfile, guildMember, profileData, user, form, updateBioFromMarkdown]);
 
 	const isFormDirty = form.formState.isDirty;
 	const hasModeChanges = isPerGuildProfile && (avatarMode !== initialAvatarMode || bannerMode !== initialBannerMode);
 	const hasUnsavedChanges = Boolean(
-		isFormDirty || previewAvatarUrl || hasClearedAvatar || previewBannerUrl || hasClearedBanner || hasModeChanges,
+		isFormDirty ||
+			previewAvatarUrl ||
+			hasClearedAvatar ||
+			previewBannerUrl ||
+			hasClearedBanner ||
+			previewProfileEffectUrl ||
+			hasClearedProfileEffect ||
+			hasModeChanges,
 	);
 
 	const hasPremium = useMemo(() => user?.isPremium() ?? false, [user]);
@@ -381,6 +397,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 					pronouns: data.pronouns,
 					accent_color: data.accent_color,
 					nick: data.nick,
+					profile_effect: user.profileEffect || null,
 				});
 				setInitialAvatarMode(avatarMode);
 				setInitialBannerMode(bannerMode);
@@ -397,6 +414,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 					global_name: data.global_name,
 					pronouns: data.pronouns,
 					accent_color: data.accent_color,
+					profile_effect: data.profile_effect,
 				};
 
 				if (data.premium_badge_hidden !== undefined) {
@@ -427,6 +445,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 					global_name: newUser.global_name || null,
 					pronouns: newUser.pronouns || null,
 					accent_color: typeof newUser.accent_color === 'number' ? newUser.accent_color : null,
+					profile_effect: newUser.profile_effect || null,
 					premium_badge_hidden: newUser.premium_badge_hidden ?? false,
 					premium_badge_timestamp_hidden: newUser.premium_badge_timestamp_hidden ?? false,
 					premium_badge_masked: newUser.premium_badge_masked ?? false,
@@ -439,6 +458,8 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			setHasClearedAvatar(false);
 			setPreviewBannerUrl(null);
 			setHasClearedBanner(false);
+			setPreviewProfileEffectUrl(null);
+			setHasClearedProfileEffect(false);
 		},
 		[form, isPerGuildProfile, selectedGuildId, updateBioFromMarkdown, user, avatarMode, bannerMode],
 	);
@@ -461,6 +482,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				pronouns: pronouns,
 				accent_color: typeof accentColor === 'number' ? accentColor : null,
 				nick: guildMember?.nick || null,
+				profile_effect: user.profileEffect || null,
 			});
 
 			setHasCustomAvatar(guildMember?.avatar !== null && !guildMember?.isAvatarUnset());
@@ -478,6 +500,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				pronouns: user.pronouns || null,
 				accent_color: typeof user.accentColor === 'number' ? user.accentColor : null,
 				nick: null,
+				profile_effect: user.profileEffect || null,
 				premium_badge_hidden: user.premiumBadgeHidden ?? false,
 				premium_badge_timestamp_hidden: user.premiumBadgeTimestampHidden ?? false,
 				premium_badge_masked: user.premiumBadgeMasked ?? false,
@@ -496,6 +519,8 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		setPreviewAvatarUrl(null);
 		setHasClearedBanner(false);
 		setPreviewBannerUrl(null);
+		setHasClearedProfileEffect(false);
+		setPreviewProfileEffectUrl(null);
 	}, [
 		form,
 		user,
@@ -530,6 +555,22 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		},
 		[form, isPerGuildProfile],
 	);
+
+	const handleProfileEffectChange = useCallback(
+		(base64: string) => {
+			form.setValue('profile_effect', base64, {shouldDirty: true});
+			setPreviewProfileEffectUrl(base64);
+			setHasClearedProfileEffect(false);
+			form.clearErrors('profile_effect');
+		},
+		[form],
+	);
+
+	const handleProfileEffectClear = useCallback(() => {
+		form.setValue('profile_effect', null, {shouldDirty: true});
+		setPreviewProfileEffectUrl(null);
+		setHasClearedProfileEffect(true);
+	}, [form]);
 
 	const handleAvatarClear = useCallback(() => {
 		form.setValue('avatar', null);
@@ -641,6 +682,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const hasBanner = isPerGuildProfile
 		? hasCustomBanner || Boolean(previewBannerUrl)
 		: Boolean(user.banner) || Boolean(previewBannerUrl);
+	const hasProfileEffect = Boolean(user.profileEffect) || Boolean(previewProfileEffectUrl);
 
 	return (
 		<>
@@ -742,6 +784,17 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 										/>
 									</div>
 
+									{!isPerGuildProfile && (
+										<div>
+											<ProfileEffectUploader
+												hasProfileEffect={hasProfileEffect && !hasClearedProfileEffect}
+												onProfileEffectChange={handleProfileEffectChange}
+												onProfileEffectClear={handleProfileEffectClear}
+												errorMessage={form.formState.errors.profile_effect?.message}
+											/>
+										</div>
+									)}
+
 									<div className={isPerGuildProfile && !hasPerGuildProfiles ? styles.opacityHalf : ''}>
 										<AccentColorPicker
 											value={form.watch('accent_color') ?? 0}
@@ -794,8 +847,10 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 										user={user}
 										previewAvatarUrl={previewAvatarUrl}
 										previewBannerUrl={previewBannerUrl}
+										previewProfileEffectUrl={previewProfileEffectUrl}
 										hasClearedAvatar={hasClearedAvatar}
 										hasClearedBanner={hasClearedBanner}
+										hasClearedProfileEffect={hasClearedProfileEffect}
 										previewBio={actualBio}
 										previewPronouns={form.watch('pronouns')}
 										previewAccentColor={form.watch('accent_color')}

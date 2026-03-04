@@ -26,6 +26,7 @@ import {Button} from '@app/components/uikit/button/Button';
 import {Spinner} from '@app/components/uikit/Spinner';
 import foodPatternUrl from '@app/images/i-like-food.svg';
 import DiscoveryStore from '@app/stores/DiscoveryStore';
+import GuildStore from '@app/stores/GuildStore';
 import {useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -67,6 +68,31 @@ export const DiscoveryModal = observer(function DiscoveryModal() {
 		ModalActionCreators.pop();
 	}, []);
 
+	const normalizedQuery = DiscoveryStore.query.trim().toLowerCase();
+	const fallbackGuilds =
+		DiscoveryStore.guilds.length > 0
+			? []
+			: GuildStore.getGuilds()
+					.filter((guild) => {
+						if (!normalizedQuery) {
+							return true;
+						}
+						return guild.name.toLowerCase().includes(normalizedQuery);
+					})
+					.map((guild) => ({
+						id: guild.id,
+						name: guild.name,
+						icon: guild.icon,
+						description: null,
+						category_type: 0,
+						member_count: guild.memberCount,
+						online_count: 0,
+						features: Array.from(guild.features),
+						verification_level: guild.verificationLevel,
+					}));
+
+	const guildsToRender = DiscoveryStore.guilds.length > 0 ? DiscoveryStore.guilds : fallbackGuilds;
+	const showingFallback = DiscoveryStore.guilds.length === 0 && fallbackGuilds.length > 0;
 	const hasMore = DiscoveryStore.guilds.length < DiscoveryStore.total;
 
 	return (
@@ -117,10 +143,15 @@ export const DiscoveryModal = observer(function DiscoveryModal() {
 						<Spinner />
 					</div>
 				) : (
-					DiscoveryStore.guilds.length > 0 && (
+					guildsToRender.length > 0 ? (
 						<>
+							{showingFallback && (
+								<div className={styles.fallbackNotice}>
+									{t`No discovery listings were found yet. Showing communities you already joined on this instance.`}
+								</div>
+							)}
 							<div className={styles.grid}>
-								{DiscoveryStore.guilds.map((guild) => (
+								{guildsToRender.map((guild) => (
 									<DiscoveryGuildCard key={guild.id} guild={guild} />
 								))}
 							</div>
@@ -132,6 +163,8 @@ export const DiscoveryModal = observer(function DiscoveryModal() {
 								</div>
 							)}
 						</>
+					) : (
+						<div className={styles.emptyState}>{t`No communities found.`}</div>
 					)
 				)}
 			</Modal.Content>

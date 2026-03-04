@@ -42,6 +42,7 @@ export function getDefaultAvatarPrimaryColor(id: string) {
 
 type AvatarOptions = Pick<UserRecord, 'id' | 'avatar'>;
 type BannerOptions = Pick<UserRecord, 'id' | 'banner'>;
+type ProfileEffectOptions = Pick<UserRecord, 'id' | 'profileEffect'>;
 
 interface IconOptions {
 	id: string;
@@ -135,6 +136,25 @@ export function getUserBannerURL({id, banner}: BannerOptions, animated = false, 
 		hash,
 		size,
 		animated,
+	});
+}
+
+export function getUserProfileEffectURL(
+	{id, profileEffect}: ProfileEffectOptions,
+	animated = true,
+	size: MediaProxyImageSize = 1024,
+) {
+	if (!profileEffect) {
+		return '';
+	}
+
+	const {hash, animated: isAnimated} = parseAvatarHash(profileEffect);
+	return buildWebpMediaUrl({
+		path: 'profile-effects',
+		id,
+		hash,
+		size,
+		animated: isAnimated && animated,
 	});
 }
 

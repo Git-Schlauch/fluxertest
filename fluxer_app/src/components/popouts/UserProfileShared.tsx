@@ -193,6 +193,18 @@ export const UserProfilePreviewBio: React.FC<UserProfilePreviewBioProps> = ({pro
 	return <UserProfileBio profile={profile} profileData={profileData} onShowMore={onShowMore} />;
 };
 
+export const UserProfileEffectMedia: React.FC<{mediaUrl: string | null | undefined}> = ({mediaUrl}) => {
+	if (!mediaUrl) {
+		return null;
+	}
+
+	return (
+		<div className={styles.profileEffectContainer}>
+			<img src={mediaUrl} alt="" className={styles.profileEffectMedia} loading="lazy" />
+		</div>
+	);
+};
+
 export const UserProfileMembershipInfo: React.FC<{profile: ProfileRecord; user: UserRecord}> = observer(
 	({profile, user}) => {
 		const {t} = useLingui();

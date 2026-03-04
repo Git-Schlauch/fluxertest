@@ -168,6 +168,7 @@ export async function processUserDeletion(
 		avatar_color: null,
 		banner_hash: null,
 		banner_color: null,
+		profile_effect_hash: null,
 		bio: null,
 		pronouns: null,
 		accent_color: null,
@@ -422,6 +423,16 @@ export async function processUserDeletion(
 		}
 	}
 
+	if (user.profileEffectHash) {
+		try {
+			await storageService.deleteAvatar({prefix: 'profile-effects', key: `${userId}/${user.profileEffectHash}`});
+			await purgeQueue.addUrls([`${Config.endpoints.media}/profile-effects/${userId}/${user.profileEffectHash}`]);
+			Logger.debug({userId, profileEffectHash: user.profileEffectHash}, 'Deleted profile effect media');
+		} catch (error) {
+			Logger.error({error, userId}, 'Failed to delete profile effect media');
+		}
+	}
+
 	const favoriteMemes = await favoriteMemeRepository.findByUserId(userId);
 	for (const meme of favoriteMemes) {
 		try {
@@ -491,6 +502,7 @@ export async function processUserDeletion(
 			totp_secret: null,
 			avatar_hash: null,
 			banner_hash: null,
+			profile_effect_hash: null,
 			bio: null,
 			pronouns: null,
 			accent_color: null,

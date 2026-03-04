@@ -95,6 +95,8 @@ class MediaEngineFacade {
 			participants: computed,
 			currentLatency: computed,
 			averageLatency: computed,
+			currentLatencySource: computed,
+			mediaEndpoint: computed,
 			latencyHistory: computed,
 			voiceStats: computed,
 			displayLatency: computed,
@@ -140,6 +142,12 @@ class MediaEngineFacade {
 	}
 	get averageLatency(): number | null {
 		return this.statsManager.averageLatency;
+	}
+	get currentLatencySource(): 'webrtc' | 'signal' | null {
+		return this.statsManager.currentLatencySource;
+	}
+	get mediaEndpoint(): string | null {
+		return this.statsManager.currentMediaEndpoint;
 	}
 	get latencyHistory(): Array<LatencyDataPoint> {
 		return this.statsManager.latencyHistory;

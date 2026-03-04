@@ -26,6 +26,8 @@ declare const styles: {
   readonly "membershipGuildIcon": string;
   readonly "membershipIcon": string;
   readonly "membershipTitle": string;
+  readonly "profileEffectContainer": string;
+  readonly "profileEffectMedia": string;
   readonly "rolesContainer": string;
   readonly "rolesEmpty": string;
   readonly "rolesHeader": string;

@@ -62,6 +62,9 @@ import {Track, VideoPresets} from 'livekit-client';
 import {makeAutoObservable} from 'mobx';
 
 const logger = new Logger('VoiceMediaManager');
+const NOISE_GATE_DISABLED_THRESHOLD_DB = -90;
+const NOISE_GATE_HYSTERESIS_DB = 2;
+const NOISE_GATE_RELEASE_HOLD_MS = 140;
 
 export interface SetCameraEnabledOptions {
 	deviceId?: string;
@@ -82,6 +85,18 @@ function isLocalAudioTrackWithVolume(track: unknown): track is LocalAudioTrackWi
 }
 
 class VoiceMediaManager {
+	private noiseGateAudioContext: AudioContext | null = null;
+	private noiseGateAnalyser: AnalyserNode | null = null;
+	private noiseGateSource: MediaStreamAudioSourceNode | null = null;
+	private noiseGateAnimationFrameId: number | null = null;
+	private noiseGateTrackIdentity: string | null = null;
+	private noiseGateFloatBuffer: Float32Array | null = null;
+	private noiseGateByteBuffer: Uint8Array | null = null;
+	private noiseGateUseFloat = false;
+	private noiseGateOpen = true;
+	private noiseGateLastAboveThresholdAt = 0;
+	private noiseGateLastAppliedVolume = Number.NaN;
+
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
@@ -220,6 +235,8 @@ class VoiceMediaManager {
 			}
 		} catch (e) {
 			logger.error('Failed', e);
+		} finally {
+			this.stopNoiseGateMonitoring();
 		}
 	}
 
@@ -381,6 +398,182 @@ class VoiceMediaManager {
 			}
 			track.setVolume(localInputVolume);
 		});
+
+		this.startNoiseGateMonitoring(room);
+	}
+
+	private stopNoiseGateMonitoring(): void {
+		if (this.noiseGateAnimationFrameId !== null) {
+			cancelAnimationFrame(this.noiseGateAnimationFrameId);
+			this.noiseGateAnimationFrameId = null;
+		}
+
+		if (this.noiseGateSource) {
+			this.noiseGateSource.disconnect();
+			this.noiseGateSource = null;
+		}
+
+		if (this.noiseGateAnalyser) {
+			this.noiseGateAnalyser.disconnect();
+			this.noiseGateAnalyser = null;
+		}
+
+		if (this.noiseGateAudioContext && this.noiseGateAudioContext.state !== 'closed') {
+			void this.noiseGateAudioContext.close();
+		}
+		this.noiseGateAudioContext = null;
+		this.noiseGateTrackIdentity = null;
+		this.noiseGateFloatBuffer = null;
+		this.noiseGateByteBuffer = null;
+		this.noiseGateUseFloat = false;
+		this.noiseGateOpen = true;
+		this.noiseGateLastAboveThresholdAt = 0;
+		this.noiseGateLastAppliedVolume = Number.NaN;
+	}
+
+	private getTrackMediaStreamTrack(track: unknown): MediaStreamTrack | null {
+		if (track && typeof track === 'object' && 'mediaStreamTrack' in track) {
+			const mediaStreamTrack = (track as {mediaStreamTrack?: MediaStreamTrack}).mediaStreamTrack;
+			if (mediaStreamTrack instanceof MediaStreamTrack) {
+				return mediaStreamTrack;
+			}
+		}
+		return null;
+	}
+
+	private computeNoiseGateLevelDb(): number {
+		const analyser = this.noiseGateAnalyser;
+		if (!analyser) {
+			return -Infinity;
+		}
+
+		let peakPower = 0;
+		let sumOfSquares = 0;
+		let sampleCount = 0;
+
+		if (this.noiseGateUseFloat && this.noiseGateFloatBuffer) {
+			analyser.getFloatTimeDomainData(this.noiseGateFloatBuffer as Float32Array<ArrayBuffer>);
+			for (let i = 0; i < this.noiseGateFloatBuffer.length; i++) {
+				const sample = this.noiseGateFloatBuffer[i];
+				const power = sample * sample;
+				peakPower = Math.max(peakPower, power);
+				sumOfSquares += power;
+				sampleCount++;
+			}
+		} else if (this.noiseGateByteBuffer) {
+			analyser.getByteTimeDomainData(this.noiseGateByteBuffer as Uint8Array<ArrayBuffer>);
+			for (let i = 0; i < this.noiseGateByteBuffer.length; i++) {
+				const sample = (this.noiseGateByteBuffer[i] - 128) / 128;
+				const power = sample * sample;
+				peakPower = Math.max(peakPower, power);
+				sumOfSquares += power;
+				sampleCount++;
+			}
+		}
+
+		if (sampleCount === 0 || peakPower <= 0) {
+			return -Infinity;
+		}
+
+		const averagePower = sumOfSquares / sampleCount;
+		return averagePower > 0 ? 10 * Math.log10(averagePower) : -Infinity;
+	}
+
+	private startNoiseGateMonitoring(room: Room | null): void {
+		if (!room?.localParticipant) {
+			this.stopNoiseGateMonitoring();
+			return;
+		}
+
+		const publication = Array.from(room.localParticipant.audioTrackPublications.values()).find(
+			(pub) => Boolean(pub.track) && isLocalAudioTrackWithVolume(pub.track),
+		);
+		const localTrack = publication?.track;
+		if (!localTrack || !isLocalAudioTrackWithVolume(localTrack)) {
+			this.stopNoiseGateMonitoring();
+			return;
+		}
+
+		const mediaStreamTrack = this.getTrackMediaStreamTrack(localTrack);
+		if (!mediaStreamTrack) {
+			this.stopNoiseGateMonitoring();
+			return;
+		}
+
+		const trackIdentity = `${publication?.trackSid ?? 'local'}:${mediaStreamTrack.id}`;
+		if (this.noiseGateTrackIdentity === trackIdentity && this.noiseGateAnimationFrameId !== null) {
+			return;
+		}
+
+		this.stopNoiseGateMonitoring();
+
+		const AudioContextClass =
+			window.AudioContext || (window as {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+		if (!AudioContextClass) {
+			return;
+		}
+
+		try {
+			this.noiseGateAudioContext = new AudioContextClass();
+			this.noiseGateAnalyser = this.noiseGateAudioContext.createAnalyser();
+			this.noiseGateAnalyser.fftSize = 2048;
+			this.noiseGateAnalyser.smoothingTimeConstant = 0.2;
+			this.noiseGateUseFloat = typeof this.noiseGateAnalyser.getFloatTimeDomainData === 'function';
+
+			if (this.noiseGateUseFloat) {
+				this.noiseGateFloatBuffer = new Float32Array(this.noiseGateAnalyser.fftSize);
+			} else {
+				this.noiseGateByteBuffer = new Uint8Array(this.noiseGateAnalyser.fftSize);
+			}
+
+			const sourceStream = new MediaStream([mediaStreamTrack]);
+			this.noiseGateSource = this.noiseGateAudioContext.createMediaStreamSource(sourceStream);
+			this.noiseGateSource.connect(this.noiseGateAnalyser);
+			this.noiseGateTrackIdentity = trackIdentity;
+
+			const tick = () => {
+				if (mediaStreamTrack.readyState === 'ended') {
+					this.stopNoiseGateMonitoring();
+					return;
+				}
+
+				const levelDb = this.computeNoiseGateLevelDb();
+				const baseInputVolume = voiceVolumePercentToTrackVolume(VoiceSettingsStore.getInputVolume());
+				const thresholdDb = VoiceSettingsStore.getNoiseGateThresholdDb();
+				const now = Date.now();
+
+				let isGateOpen = true;
+				if (thresholdDb > NOISE_GATE_DISABLED_THRESHOLD_DB && Number.isFinite(levelDb)) {
+					const openThresholdDb = thresholdDb + NOISE_GATE_HYSTERESIS_DB;
+					if (levelDb >= openThresholdDb) {
+						this.noiseGateOpen = true;
+						this.noiseGateLastAboveThresholdAt = now;
+					} else if (
+						levelDb < thresholdDb &&
+						now - this.noiseGateLastAboveThresholdAt > NOISE_GATE_RELEASE_HOLD_MS
+					) {
+						this.noiseGateOpen = false;
+					}
+					isGateOpen = this.noiseGateOpen;
+				} else {
+					this.noiseGateOpen = true;
+					isGateOpen = true;
+				}
+
+				const targetVolume = isGateOpen ? baseInputVolume : 0;
+				if (targetVolume !== this.noiseGateLastAppliedVolume) {
+					localTrack.setVolume(targetVolume);
+					this.noiseGateLastAppliedVolume = targetVolume;
+				}
+
+				this.noiseGateAnimationFrameId = requestAnimationFrame(tick);
+			};
+
+			this.noiseGateAnimationFrameId = requestAnimationFrame(tick);
+		} catch (error) {
+			logger.warn('Failed to start noise gate monitor', {error});
+			this.stopNoiseGateMonitoring();
+		}
 	}
 
 	setLocalVideoDisabled(identity: string, disabled: boolean, room: Room | null, connectionId: string | null): void {

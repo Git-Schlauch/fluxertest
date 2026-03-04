@@ -44,6 +44,7 @@ export interface ProfileCardDisplayState {
 	avatarUrl: string | null;
 	hoverAvatarUrl: string | null;
 	bannerUrl: string | null;
+	profileEffectUrl: string | null;
 	accentColor: string;
 	profileData: Readonly<UserProfile> | null;
 }
@@ -86,6 +87,16 @@ export function useProfileCardDisplayState({
 			),
 		[profileContext, previewOverrides, shouldAutoplayProfileAnimations, resolvedBannerSize],
 	);
+	const profileEffectUrl = useMemo(
+		() =>
+			ProfileDisplayUtils.getProfileEffectUrl(
+				profileContext,
+				previewOverrides,
+				shouldAutoplayProfileAnimations,
+				resolvedBannerSize,
+			),
+		[profileContext, previewOverrides, shouldAutoplayProfileAnimations, resolvedBannerSize],
+	);
 
 	const profileData = useMemo(() => profile?.getEffectiveProfile() ?? null, [profile]);
 	const accentColor = useMemo(
@@ -98,6 +109,7 @@ export function useProfileCardDisplayState({
 		avatarUrl: avatarUrls.avatarUrl,
 		hoverAvatarUrl: avatarUrls.hoverAvatarUrl,
 		bannerUrl,
+		profileEffectUrl,
 		accentColor,
 		profileData,
 	};

@@ -151,9 +151,10 @@
 	inset: 0;
 	border-radius: var(--radius-lg);
 	border: 0px solid var(--voice-status-success);
-	transition-property: border;
-	transition-delay: 0.5s;
-	transition-duration: 0.4s;
+	transition-property: border-width, border-color;
+	transition-delay: 0s;
+	transition-duration: 140ms;
+	transition-timing-function: ease-out;
 	pointer-events: none;
 }
 
@@ -162,8 +163,7 @@
 }
 
 .lkParticipantTile[data-speaking='true']::after {
-	transition-delay: 0s;
-	transition-duration: 0.2s;
+	transition-duration: 60ms;
 	border-width: var(--speaking-indicator-width);
 }
 

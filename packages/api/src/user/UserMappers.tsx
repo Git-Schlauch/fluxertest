@@ -167,6 +167,7 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 		accent_color: user.accentColor,
 		banner: hasAnimatedBanner > 0 ? user.bannerHash : null,
 		banner_color: hasAnimatedBanner > 0 ? user.bannerColor : null,
+		profile_effect: user.profileEffectHash,
 		mfa_enabled: (user.authenticatorTypes?.size ?? 0) > 0,
 		authenticator_types: user.authenticatorTypes ? Array.from(user.authenticatorTypes) : undefined,
 		verified: user.emailVerified,
@@ -218,6 +219,7 @@ export function mapUserToProfileResponse(user: User): UserProfileResponse {
 		pronouns: user.pronouns,
 		banner: hasAnimatedBanner > 0 ? user.bannerHash : null,
 		banner_color: hasAnimatedBanner > 0 ? user.bannerColor : null,
+		profile_effect: user.profileEffectHash,
 		accent_color: user.accentColor,
 	};
 }

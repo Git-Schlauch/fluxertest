@@ -100,8 +100,10 @@ function resolveScreenShareFrameRate(frameRate: number): number {
 const VoiceDetailsPopout = observer(() => {
 	const {i18n, t} = useLingui();
 	const latency = MediaEngineStore.currentLatency;
+	const latencySource = MediaEngineStore.currentLatencySource;
 	const averageLatency = MediaEngineStore.averageLatency;
 	const latencyHistory = MediaEngineStore.latencyHistory;
+	const mediaEndpoint = MediaEngineStore.mediaEndpoint;
 	const voiceServerEndpoint = MediaEngineStore.voiceServerEndpoint;
 	const connectionId = MediaEngineStore.connectionId;
 	const voiceState = MediaEngineStore.getCurrentUserVoiceState();
@@ -232,7 +234,9 @@ const VoiceDetailsPopout = observer(() => {
 					</div>
 				)}
 				<div className={styles.popoutStatRow}>
-					<span className={styles.popoutStatLabel}>{t`Current ping:`}</span>
+					<span className={styles.popoutStatLabel}>
+						{latencySource === 'webrtc' ? t`WebRTC ping:` : t`Current ping:`}
+					</span>
 					<span className={styles.popoutStatValue}>{latency !== null ? `${latency}ms` : t`Measuring...`}</span>
 				</div>
 				{averageLatency !== null && averageLatency !== undefined && (
@@ -241,9 +245,37 @@ const VoiceDetailsPopout = observer(() => {
 						<span className={styles.popoutStatValue}>{averageLatency}ms</span>
 					</div>
 				)}
+				{mediaEndpoint && (
+					<div className={styles.popoutStatRow}>
+						<span className={styles.popoutStatLabel}>{t`Media endpoint:`}</span>
+						<Tooltip text={mediaEndpoint}>
+							<FocusRing offset={-2}>
+								<div
+									className={styles.endpointBadge}
+									role="button"
+									tabIndex={0}
+									aria-label={t`Copy endpoint`}
+									onClick={async (e) => {
+										e.stopPropagation();
+										await TextCopyActionCreators.copy(i18n, mediaEndpoint);
+									}}
+									onKeyDown={async (e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											e.stopPropagation();
+											await TextCopyActionCreators.copy(i18n, mediaEndpoint);
+										}
+									}}
+								>
+									<span className={styles.endpointBadgeText}>{mediaEndpoint}</span>
+								</div>
+							</FocusRing>
+						</Tooltip>
+					</div>
+				)}
 				{strippedEndpoint && (
 					<div className={styles.popoutStatRow}>
-						<span className={styles.popoutStatLabel}>{t`Endpoint:`}</span>
+						<span className={styles.popoutStatLabel}>{t`Signal endpoint:`}</span>
 						<Tooltip text={strippedEndpoint}>
 							<FocusRing offset={-2}>
 								<div
@@ -873,6 +905,7 @@ const MockedVoiceConnectionStatus = observer(() => {
 	const {openProps: popoutProps} = usePopout('voice-details-popout');
 	const latency = 42;
 	const averageLatency = 45;
+	const mediaEndpoint = '198.51.100.42:50049/udp (srflx)';
 
 	const generateMockLatencyData = () => {
 		const data: Array<{timestamp: number; latency: number}> = [];
@@ -1004,7 +1037,33 @@ const MockedVoiceConnectionStatus = observer(() => {
 									<span className={styles.popoutStatValue}>{averageLatency}ms</span>
 								</div>
 								<div className={styles.popoutStatRow}>
-									<span className={styles.popoutStatLabel}>{t`Endpoint:`}</span>
+									<span className={styles.popoutStatLabel}>{t`Media endpoint:`}</span>
+									<Tooltip text={mediaEndpoint}>
+										<FocusRing offset={-2}>
+											<div
+												className={styles.endpointBadge}
+												role="button"
+												tabIndex={0}
+												aria-label={t`Copy endpoint`}
+												onClick={async (e) => {
+													e.stopPropagation();
+													await TextCopyActionCreators.copy(i18n, mediaEndpoint);
+												}}
+												onKeyDown={async (e) => {
+													if (e.key === 'Enter' || e.key === ' ') {
+														e.preventDefault();
+														e.stopPropagation();
+														await TextCopyActionCreators.copy(i18n, mediaEndpoint);
+													}
+												}}
+											>
+												<span className={styles.endpointBadgeText}>{mediaEndpoint}</span>
+											</div>
+										</FocusRing>
+									</Tooltip>
+								</div>
+								<div className={styles.popoutStatRow}>
+									<span className={styles.popoutStatLabel}>{t`Signal endpoint:`}</span>
 									<Tooltip text="mock.voice.server:443">
 										<FocusRing offset={-2}>
 											<div

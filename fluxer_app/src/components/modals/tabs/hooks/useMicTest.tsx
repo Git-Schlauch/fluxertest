@@ -45,6 +45,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 	const [isTesting, setIsTesting] = useState(false);
 	const [micLevel, setMicLevel] = useState(-Infinity);
 	const [peakLevel, setPeakLevel] = useState(-Infinity);
+	const [isGateOpen, setIsGateOpen] = useState(true);
 
 	const audioContextRef = useRef<AudioContext | null>(null);
 	const analyserRef = useRef<AnalyserNode | null>(null);
@@ -137,6 +138,8 @@ export const useMicTest = (settings: MicTestSettings) => {
 			gainNode.gain.cancelScheduledValues(ctxTime);
 			gainNode.gain.setTargetAtTime(targetGain, ctxTime, 0.01);
 		}
+		const nextGateOpen = gateIsOpenRef.current;
+		setIsGateOpen((previous) => (previous === nextGateOpen ? previous : nextGateOpen));
 
 		animationFrameRef.current = requestAnimationFrame(drawLoop);
 	}, [calculateLevel, settings.inputVolume, settings.noiseGateThresholdDb]);
@@ -193,6 +196,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 		setIsTesting(false);
 		setMicLevel(-Infinity);
 		setPeakLevel(-Infinity);
+		setIsGateOpen(true);
 	}, []);
 
 	const start = useCallback(async () => {
@@ -296,6 +300,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 		isTesting,
 		micLevel,
 		peakLevel,
+		isGateOpen,
 		start,
 		stop,
 	};

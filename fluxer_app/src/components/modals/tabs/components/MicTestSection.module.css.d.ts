@@ -12,6 +12,8 @@ declare const styles: {
   readonly "levelStatus": string;
   readonly "meterBar": string;
   readonly "meterContainer": string;
+  readonly "meterGateLabel": string;
+  readonly "meterGateThreshold": string;
   readonly "meterPeak": string;
   readonly "testInfo": string;
 };

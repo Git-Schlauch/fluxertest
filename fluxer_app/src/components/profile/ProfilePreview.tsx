@@ -22,7 +22,7 @@ import {modal} from '@app/actions/ModalActionCreators';
 import {CustomStatusDisplay} from '@app/components/common/custom_status_display/CustomStatusDisplay';
 import {UserProfileModal} from '@app/components/modals/UserProfileModal';
 import {UserProfileBadges} from '@app/components/popouts/UserProfileBadges';
-import {UserProfileMembershipInfo, UserProfilePreviewBio} from '@app/components/popouts/UserProfileShared';
+import {UserProfileEffectMedia, UserProfileMembershipInfo, UserProfilePreviewBio} from '@app/components/popouts/UserProfileShared';
 import styles from '@app/components/profile/ProfilePreview.module.css';
 import {ProfileCardBanner} from '@app/components/profile/profile_card/ProfileCardBanner';
 import {ProfileCardContent} from '@app/components/profile/profile_card/ProfileCardContent';
@@ -53,8 +53,10 @@ interface ProfilePreviewProps {
 	user: UserRecord;
 	previewAvatarUrl?: string | null;
 	previewBannerUrl?: string | null;
+	previewProfileEffectUrl?: string | null;
 	hasClearedAvatar?: boolean;
 	hasClearedBanner?: boolean;
+	hasClearedProfileEffect?: boolean;
 	previewBio?: string | null;
 	previewPronouns?: string | null;
 	previewAccentColor?: number | null;
@@ -77,8 +79,10 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		user,
 		previewAvatarUrl,
 		previewBannerUrl,
+		previewProfileEffectUrl,
 		hasClearedAvatar,
 		hasClearedBanner,
+		hasClearedProfileEffect,
 		previewBio,
 		previewPronouns,
 		previewAccentColor,
@@ -101,16 +105,20 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			() => ({
 				previewAvatarUrl,
 				previewBannerUrl,
+				previewProfileEffectUrl,
 				hasClearedAvatar,
 				hasClearedBanner,
+				hasClearedProfileEffect,
 				ignoreGuildAvatar: ignoreGuildAvatarInPreview,
 				ignoreGuildBanner: ignoreGuildBannerInPreview,
 			}),
 			[
 				previewAvatarUrl,
 				previewBannerUrl,
+				previewProfileEffectUrl,
 				hasClearedAvatar,
 				hasClearedBanner,
+				hasClearedProfileEffect,
 				ignoreGuildAvatarInPreview,
 				ignoreGuildBannerInPreview,
 			],
@@ -126,7 +134,9 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		const mockProfile = useMemo(() => {
 			const profile = createMockProfile(previewUser, {
 				previewBannerUrl,
+				previewProfileEffectUrl,
 				hasClearedBanner,
+				hasClearedProfileEffect,
 				previewBio,
 				previewPronouns,
 				previewAccentColor,
@@ -150,7 +160,9 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		}, [
 			previewUser,
 			previewBannerUrl,
+			previewProfileEffectUrl,
 			hasClearedBanner,
+			hasClearedProfileEffect,
 			previewBio,
 			previewPronouns,
 			previewAccentColor,
@@ -165,6 +177,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			avatarUrl: finalAvatarUrl,
 			hoverAvatarUrl: finalHoverAvatarUrl,
 			bannerUrl: finalBannerUrl,
+			profileEffectUrl: finalProfileEffectUrl,
 			accentColor,
 		} = useProfileCardDisplayState({
 			user,
@@ -187,14 +200,26 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 						previewOverrides={{
 							previewAvatarUrl,
 							previewBannerUrl,
+							previewProfileEffectUrl,
 							hasClearedAvatar,
 							hasClearedBanner,
+							hasClearedProfileEffect,
 						}}
 						previewUser={previewUser}
 					/>
 				)),
 			);
-		}, [user.id, guildId, previewAvatarUrl, previewBannerUrl, hasClearedAvatar, hasClearedBanner, previewUser]);
+		}, [
+			user.id,
+			guildId,
+			previewAvatarUrl,
+			previewBannerUrl,
+			previewProfileEffectUrl,
+			hasClearedAvatar,
+			hasClearedBanner,
+			hasClearedProfileEffect,
+			previewUser,
+		]);
 
 		const pronouns = previewPronouns !== undefined ? previewPronouns : user.pronouns;
 		const displayName = previewNick || NicknameUtils.getNickname(previewUser, guildId ?? undefined);
@@ -254,6 +279,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 									alwaysAnimate={shouldAutoplayProfileAnimations}
 								/>
 							</div>
+							<UserProfileEffectMedia mediaUrl={finalProfileEffectUrl} />
 							<UserProfilePreviewBio profile={mockProfile} onShowMore={openMockProfile} />
 							{showMembershipInfo && (
 								<UserProfileMembershipInfo

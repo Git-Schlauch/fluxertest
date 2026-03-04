@@ -40,6 +40,7 @@ import {UserProfileDataWarning} from '@app/components/popouts/UserProfileDataWar
 import {
 	UserProfileBio,
 	UserProfileConnections,
+	UserProfileEffectMedia,
 	UserProfileMembershipInfo,
 	UserProfileRoles,
 } from '@app/components/popouts/UserProfileShared';
@@ -149,6 +150,7 @@ interface ProfileContentProps {
 	profile: ProfileRecord;
 	user: UserRecord;
 	userNote: string | null;
+	profileEffectUrl?: string | null;
 	autoFocusNote?: boolean;
 	noteRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
@@ -261,33 +263,36 @@ const UserNoteEditor: React.FC<UserNoteEditorProps> = observer(({userId, initial
 	);
 });
 
-const ProfileContent: React.FC<ProfileContentProps> = observer(({profile, user, userNote, autoFocusNote, noteRef}) => {
-	const guildMember = GuildMemberStore.getMember(profile?.guildId ?? '', user.id);
-	const memberRoles = profile?.guildId && guildMember ? guildMember.getSortedRoles() : [];
-	const canManageRoles = PermissionStore.can(Permissions.MANAGE_ROLES, {guildId: profile?.guild?.id});
+const ProfileContent: React.FC<ProfileContentProps> = observer(
+	({profile, user, userNote, profileEffectUrl, autoFocusNote, noteRef}) => {
+		const guildMember = GuildMemberStore.getMember(profile?.guildId ?? '', user.id);
+		const memberRoles = profile?.guildId && guildMember ? guildMember.getSortedRoles() : [];
+		const canManageRoles = PermissionStore.can(Permissions.MANAGE_ROLES, {guildId: profile?.guild?.id});
 
-	const handleNavigate = useCallback(() => {
-		ModalActionCreators.pop();
-	}, []);
+		const handleNavigate = useCallback(() => {
+			ModalActionCreators.pop();
+		}, []);
 
-	return (
-		<div className={userProfileModalStyles.profileContent}>
-			<div className={userProfileModalStyles.profileContentHeader}>
-				<VoiceActivitySection userId={user.id} onNavigate={handleNavigate} showAllActivities={true} />
-				<UserProfileBio profile={profile} />
-				<UserProfileMembershipInfo profile={profile} user={user} />
-				<UserProfileRoles
-					profile={profile}
-					user={user}
-					memberRoles={[...memberRoles]}
-					canManageRoles={canManageRoles}
-				/>
-				<UserProfileConnections profile={profile} variant="cards" />
-				<UserNoteEditor userId={user.id} initialNote={userNote} autoFocus={autoFocusNote} noteRef={noteRef} />
+		return (
+			<div className={userProfileModalStyles.profileContent}>
+				<div className={userProfileModalStyles.profileContentHeader}>
+					<VoiceActivitySection userId={user.id} onNavigate={handleNavigate} showAllActivities={true} />
+					<UserProfileEffectMedia mediaUrl={profileEffectUrl} />
+					<UserProfileBio profile={profile} />
+					<UserProfileMembershipInfo profile={profile} user={user} />
+					<UserProfileRoles
+						profile={profile}
+						user={user}
+						memberRoles={[...memberRoles]}
+						canManageRoles={canManageRoles}
+					/>
+					<UserProfileConnections profile={profile} variant="cards" />
+					<UserNoteEditor userId={user.id} initialNote={userNote} autoFocus={autoFocusNote} noteRef={noteRef} />
+				</div>
 			</div>
-		</div>
-	);
-});
+		);
+	},
+);
 
 const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 	({
@@ -327,6 +332,16 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 		const bannerUrl = useMemo(
 			() =>
 				ProfileDisplayUtils.getProfileBannerUrl(
+					profileContext,
+					previewOverrides,
+					shouldAutoplayProfileAnimations,
+					MEDIA_PROXY_PROFILE_BANNER_SIZE_MODAL,
+				),
+			[profileContext, previewOverrides, shouldAutoplayProfileAnimations],
+		);
+		const profileEffectUrl = useMemo(
+			() =>
+				ProfileDisplayUtils.getProfileEffectUrl(
 					profileContext,
 					previewOverrides,
 					shouldAutoplayProfileAnimations,
@@ -644,6 +659,7 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 							profile={profile}
 							user={user}
 							userNote={userNote}
+							profileEffectUrl={profileEffectUrl}
 							autoFocusNote={autoFocusNote}
 							noteRef={noteRef}
 						/>
@@ -651,7 +667,7 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 				default:
 					return renderMutualTabContent();
 			}
-		}, [activeTab, autoFocusNote, noteRef, profile, renderMutualTabContent, user, userNote]);
+		}, [activeTab, autoFocusNote, noteRef, profile, profileEffectUrl, renderMutualTabContent, user, userNote]);
 
 		const reactId = useId();
 		const safeId = reactId.replace(/[^a-zA-Z0-9_-]/g, '');

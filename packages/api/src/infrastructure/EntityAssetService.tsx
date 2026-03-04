@@ -35,12 +35,13 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import {ms} from 'itty-time';
 
-export type AssetType = 'avatar' | 'banner' | 'icon' | 'splash' | 'embed_splash';
+export type AssetType = 'avatar' | 'banner' | 'profile_effect' | 'icon' | 'splash' | 'embed_splash';
 export type EntityType = 'user' | 'guild' | 'guild_member';
 
 const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	avatar: 'avatars',
 	banner: 'banners',
+	profile_effect: 'profile-effects',
 	icon: 'icons',
 	splash: 'splashes',
 	embed_splash: 'embed-splashes',
@@ -257,6 +258,7 @@ export class EntityAssetService {
 			case 'icon':
 				return 'avatar';
 			case 'banner':
+			case 'profile_effect':
 			case 'splash':
 			case 'embed_splash':
 				return 'banner';

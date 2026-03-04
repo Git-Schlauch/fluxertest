@@ -135,6 +135,7 @@ export class ProfileRecord {
 			bio: this.guildMemberProfile.bio ?? this.userProfile.bio,
 			banner: isBannerUnset ? null : (this.guildMemberProfile.banner ?? this.userProfile.banner),
 			banner_color: bannerColor,
+			profile_effect: this.userProfile.profile_effect ?? null,
 			pronouns: this.guildMemberProfile.pronouns ?? this.userProfile.pronouns,
 			accent_color: this.guildMemberProfile.accent_color ?? this.userProfile.accent_color,
 		};

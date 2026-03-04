@@ -81,6 +81,7 @@ interface PasswordChangeVerifyResponse {
 export async function update(
 	user: Partial<UserPrivate> & {
 		avatar?: string | null;
+		profile_effect?: string | null;
 		password?: string;
 		new_password?: string;
 		premium_badge_hidden?: boolean;

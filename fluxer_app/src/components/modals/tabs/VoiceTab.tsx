@@ -431,7 +431,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						/>
 						<div>
 							<div className={styles.sliderLabel}>
-								<Trans>Noise Gate Threshold</Trans>
+								<Trans>Noise Gate Threshold (dBFS)</Trans>
 							</div>
 							<Slider
 								value={noiseGateThresholdDb}
@@ -442,10 +442,16 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 								step={1}
 								markers={[-90, -70, -60, -50, -40, -30, -20, -10]}
 								stickToMarkers={false}
-								onMarkerRender={(value) => `${Math.round(value)} dB`}
-								onValueRender={(value) => (value <= -90 ? t`Disabled` : `${Math.round(value)} dB`)}
+								onMarkerRender={(value) => `${Math.round(value)} dBFS`}
+								onValueRender={(value) => (value <= -90 ? t`Disabled` : `${Math.round(value)} dBFS`)}
 								onValueChange={(value) => VoiceSettingsActionCreators.update({noiseGateThresholdDb: value})}
 							/>
+							<p className={styles.audioProcessingDescription}>
+								<Trans>
+									Move right to make voice activation less sensitive (only louder speech opens the gate). 0 dBFS is
+									maximum loudness.
+								</Trans>
+							</p>
 						</div>
 					</div>
 				</div>

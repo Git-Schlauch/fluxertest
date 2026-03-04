@@ -132,6 +132,26 @@
 	padding: var(--spacing-10) 0;
 }
 
+.fallbackNotice {
+	margin-top: var(--spacing-4);
+	padding: var(--spacing-3);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+	line-height: 1.4;
+}
+
+.emptyState {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--spacing-10) 0;
+	color: var(--text-secondary);
+	font-size: 0.9375rem;
+}
+
 .loadMore {
 	display: flex;
 	justify-content: center;

@@ -28,7 +28,7 @@ import VoiceParticipantManager from '@app/stores/voice/VoiceParticipantManager';
 import VoicePermissionManager from '@app/stores/voice/VoicePermissionManager';
 import {SoundType} from '@app/utils/SoundUtils';
 import type {Participant, RemoteParticipant, Room} from 'livekit-client';
-import {RoomEvent, Track} from 'livekit-client';
+import {ParticipantEvent, RoomEvent, Track} from 'livekit-client';
 
 const logger = new Logger('VoiceRoomEventBinder');
 
@@ -47,10 +47,38 @@ export function bindRoomEvents(
 	callbacks: RoomEventCallbacks,
 ): void {
 	const guard = VoiceConnectionManager.createGuardedHandler.bind(VoiceConnectionManager);
+	const speakingHandlers = new Map<string, () => void>();
+
+	const bindSpeakingHandler = (participant: Participant) => {
+		if (speakingHandlers.has(participant.identity)) {
+			return;
+		}
+
+		const handler = guard(attemptId, () => VoiceParticipantManager.upsertParticipant(participant));
+		participant.on(ParticipantEvent.IsSpeakingChanged, handler);
+		speakingHandlers.set(participant.identity, () => participant.off(ParticipantEvent.IsSpeakingChanged, handler));
+	};
+
+	const unbindSpeakingHandler = (participant: Participant) => {
+		const cleanup = speakingHandlers.get(participant.identity);
+		if (!cleanup) {
+			return;
+		}
+		cleanup();
+		speakingHandlers.delete(participant.identity);
+	};
+
+	const bindExistingSpeakingHandlers = () => {
+		bindSpeakingHandler(room.localParticipant);
+		room.remoteParticipants.forEach((participant) => bindSpeakingHandler(participant));
+	};
+
+	bindExistingSpeakingHandlers();
 
 	room.on(
 		RoomEvent.Connected,
 		guard(attemptId, async () => {
+			bindExistingSpeakingHandlers();
 			VoiceParticipantManager.hydrateFromRoom(room);
 			VoicePermissionManager.applyDeafen(room, LocalVoiceStateStore.getSelfDeaf());
 			VoiceConnectionManager.markConnected();
@@ -67,6 +95,10 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.Disconnected,
 		guard(attemptId, () => {
+			for (const cleanup of speakingHandlers.values()) {
+				cleanup();
+			}
+			speakingHandlers.clear();
 			VoiceMediaStateCoordinator.resetLocalMediaState('room_disconnect');
 			VoiceMediaManager.resetStreamTracking();
 			callbacks.onDisconnected();
@@ -97,6 +129,7 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.ParticipantConnected,
 		guard(attemptId, (p: Participant) => {
+			bindSpeakingHandler(p);
 			VoiceParticipantManager.upsertParticipant(p);
 			if (p.identity.startsWith('user_')) {
 				SoundActionCreators.playSound(SoundType.UserJoin);
@@ -109,6 +142,7 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.ParticipantDisconnected,
 		guard(attemptId, (p: Participant) => {
+			unbindSpeakingHandler(p);
 			VoiceParticipantManager.removeParticipant(p.identity);
 			if (VoiceConnectionManager.disconnecting) return;
 			if (p.identity === room.localParticipant?.identity) return;

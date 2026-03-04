@@ -64,6 +64,7 @@ export class UserRecord {
 	readonly bio?: string | null;
 	readonly banner?: string | null;
 	readonly bannerColor?: number | null;
+	readonly profileEffect?: string | null;
 	readonly pronouns?: string | null;
 	readonly accentColor?: number | null;
 	readonly mfaEnabled?: boolean;
@@ -110,6 +111,7 @@ export class UserRecord {
 		if ('bio' in user) this.bio = user.bio;
 		if ('banner' in user) this.banner = user.banner;
 		if ('banner_color' in user) this.bannerColor = user.banner_color;
+		if ('profile_effect' in user) this.profileEffect = user.profile_effect;
 		if ('pronouns' in user) this.pronouns = user.pronouns;
 		if ('accent_color' in user) this.accentColor = user.accent_color;
 		if ('mfa_enabled' in user) this.mfaEnabled = user.mfa_enabled;
@@ -291,6 +293,14 @@ export class UserRecord {
 							'banner_color' in updates && updates.banner_color !== undefined
 								? (updates.banner_color as number | null)
 								: this.bannerColor,
+					}
+				: {}),
+			...(this.profileEffect !== undefined || 'profile_effect' in updates
+				? {
+						profile_effect:
+							'profile_effect' in updates && updates.profile_effect !== undefined
+								? (updates.profile_effect as string | null)
+								: this.profileEffect,
 					}
 				: {}),
 			...(this.globalName !== undefined || 'global_name' in updates
@@ -515,6 +525,7 @@ export class UserRecord {
 			this.bio === other.bio &&
 			this.banner === other.banner &&
 			this.bannerColor === other.bannerColor &&
+			this.profileEffect === other.profileEffect &&
 			this.pronouns === other.pronouns &&
 			this.mfaEnabled === other.mfaEnabled &&
 			this.phone === other.phone &&
@@ -576,6 +587,7 @@ export class UserRecord {
 			...(this.banner !== undefined ? {banner: this.banner} : {}),
 			...(this.avatarColor !== undefined ? {avatar_color: this.avatarColor} : {}),
 			...(this.bannerColor !== undefined ? {banner_color: this.bannerColor} : {}),
+			...(this.profileEffect !== undefined ? {profile_effect: this.profileEffect} : {}),
 			...(this.pronouns !== undefined ? {pronouns: this.pronouns} : {}),
 			...(this.accentColor !== undefined ? {accent_color: this.accentColor} : {}),
 			...(this.mfaEnabled !== undefined ? {mfa_enabled: this.mfaEnabled} : {}),

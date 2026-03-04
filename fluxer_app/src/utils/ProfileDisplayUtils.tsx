@@ -39,8 +39,10 @@ export interface ProfileDisplayContext {
 export interface ProfilePreviewOverrides {
 	previewAvatarUrl?: string | null;
 	previewBannerUrl?: string | null;
+	previewProfileEffectUrl?: string | null;
 	hasClearedAvatar?: boolean;
 	hasClearedBanner?: boolean;
+	hasClearedProfileEffect?: boolean;
 	ignoreGuildAvatar?: boolean;
 	ignoreGuildBanner?: boolean;
 }
@@ -133,6 +135,42 @@ export function getProfileBannerUrl(
 	}
 
 	return null;
+}
+
+export function getProfileEffectUrl(
+	context: ProfileDisplayContext,
+	overrides?: ProfilePreviewOverrides,
+	animated = true,
+	size: MediaProxyImageSize = MEDIA_PROXY_PROFILE_BANNER_SIZE_MODAL,
+): string | null {
+	const {user, profile} = context;
+	const {previewProfileEffectUrl, hasClearedProfileEffect} = overrides || {};
+
+	if (hasClearedProfileEffect) {
+		return null;
+	}
+
+	if (previewProfileEffectUrl) {
+		return previewProfileEffectUrl;
+	}
+
+	const effectiveProfileEffect = profile?.userProfile?.profile_effect ?? user.profileEffect ?? null;
+	if (!effectiveProfileEffect) {
+		return null;
+	}
+
+	if (effectiveProfileEffect.startsWith('blob:') || effectiveProfileEffect.startsWith('data:')) {
+		return effectiveProfileEffect;
+	}
+
+	return AvatarUtils.getUserProfileEffectURL(
+		{
+			id: user.id,
+			profileEffect: effectiveProfileEffect,
+		},
+		animated,
+		size,
+	);
 }
 
 export function getProfileAvatarUrls(

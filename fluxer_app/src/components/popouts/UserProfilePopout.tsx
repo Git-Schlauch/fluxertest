@@ -31,6 +31,7 @@ import {UserProfileDataWarning} from '@app/components/popouts/UserProfileDataWar
 import styles from '@app/components/popouts/UserProfilePopout.module.css';
 import {
 	UserProfileConnections,
+	UserProfileEffectMedia,
 	UserProfileMembershipInfo,
 	UserProfilePreviewBio,
 	UserProfileRoles,
@@ -223,7 +224,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 
 		const shouldAutoplayProfileAnimations = useAutoplayExpandedProfileAnimations();
 
-		const {avatarUrl, hoverAvatarUrl, bannerUrl, accentColor, profileData} = useProfileCardDisplayState({
+		const {avatarUrl, hoverAvatarUrl, bannerUrl, profileEffectUrl, accentColor, profileData} = useProfileCardDisplayState({
 			user,
 			profile,
 			guildId: profile?.guildId,
@@ -301,6 +302,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 								</div>
 							)}
 							{!isWebhook && <VoiceActivitySection userId={user.id} onNavigate={handleClosePopout} />}
+							<UserProfileEffectMedia mediaUrl={profileEffectUrl} />
 							{profile && (
 								<UserProfilePreviewBio
 									profile={profile}

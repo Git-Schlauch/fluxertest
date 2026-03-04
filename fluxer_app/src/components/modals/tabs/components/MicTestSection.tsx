@@ -40,7 +40,7 @@ interface MicTestSectionProps {
 
 export const MicTestSection: React.FC<MicTestSectionProps> = observer(({settings}) => {
 	const {t} = useLingui();
-	const {isTesting, micLevel, peakLevel, start, stop} = useMicTest(settings);
+	const {isTesting, micLevel, peakLevel, isGateOpen, start, stop} = useMicTest(settings);
 
 	const getMicLevelPercentage = () => {
 		if (!Number.isFinite(micLevel)) return 0;
@@ -91,6 +91,11 @@ export const MicTestSection: React.FC<MicTestSectionProps> = observer(({settings
 		const percentage = ((clampedLevel - minDb) / (maxDb - minDb)) * 100;
 		return Math.round(percentage);
 	};
+	const gateDisabled = settings.noiseGateThresholdDb <= -90;
+	const currentLevelLabel = Number.isFinite(micLevel) ? `${micLevel.toFixed(1)} dBFS` : '-- dBFS';
+	const peakLevelLabel = Number.isFinite(peakLevel) ? `${peakLevel.toFixed(1)} dBFS` : '-- dBFS';
+	const gateStatusLabel = gateDisabled ? t`Disabled` : isGateOpen ? t`Open` : t`Closed`;
+	const gateThresholdLabel = gateDisabled ? t`Off` : `${Math.round(settings.noiseGateThresholdDb)} dBFS`;
 
 	return (
 		<div>
@@ -150,16 +155,34 @@ export const MicTestSection: React.FC<MicTestSectionProps> = observer(({settings
 										left: `${getNoiseGateThresholdPercentage()}%`,
 									}}
 								>
-									<span className={styles.meterGateLabel}>{`Gate ${Math.round(settings.noiseGateThresholdDb)} dB`}</span>
+									<span className={styles.meterGateLabel}>{`Gate @ ${Math.round(settings.noiseGateThresholdDb)} dBFS`}</span>
 								</div>
 							)}
+						</div>
+						<div className={styles.levelInfo}>
+							<span className={styles.levelLabel}>
+								<Trans>Current / Peak</Trans>
+							</span>
+							<span className={styles.levelStatus}>{`${currentLevelLabel} / ${peakLevelLabel}`}</span>
+						</div>
+						<div className={styles.levelInfo}>
+							<span className={styles.levelLabel}>
+								<Trans>Noise Gate</Trans>
+							</span>
+							<span
+								className={clsx(
+									styles.levelStatus,
+									gateDisabled ? styles.levelQuiet : isGateOpen ? styles.levelGood : styles.levelLoud,
+								)}
+							>
+								{`${gateStatusLabel} (${gateThresholdLabel})`}
+							</span>
 						</div>
 
 						<p className={styles.helpText}>
 							<Trans>
-								Speak normally into your microphone. You should hear yourself through your speakers. The level should
-								stay in the green "Good" or yellow "Optimal" range. If a noise gate is enabled, only audio above the
-								threshold will be transmitted.
+								Speak normally into your microphone. Meter values are shown in dBFS (0 dBFS is maximum). For less
+								sensitivity, raise the gate threshold so only louder speech opens the gate.
 							</Trans>
 						</p>
 					</div>

@@ -65,6 +65,15 @@ interface RTCStatsReport {
 	jitter?: number;
 	state?: string;
 	currentRoundTripTime?: number;
+	nominated?: boolean;
+	selected?: boolean;
+	localCandidateId?: string;
+	remoteCandidateId?: string;
+	address?: string;
+	ip?: string;
+	port?: number;
+	protocol?: string;
+	candidateType?: string;
 }
 
 const LATENCY_UPDATE_INTERVAL_MS = 2000;
@@ -94,6 +103,8 @@ export class VoiceStatsManager {
 
 	currentLatency: number | null = null;
 	averageLatency: number | null = null;
+	currentLatencySource: 'webrtc' | 'signal' | null = null;
+	currentMediaEndpoint: string | null = null;
 	latencyHistory: Array<LatencyDataPoint> = [];
 	voiceStats: VoiceStats = initialVoiceStats;
 	connectionStartTime: number | null = null;
@@ -144,17 +155,19 @@ export class VoiceStatsManager {
 
 		this.latencyIntervalId = setInterval(() => {
 			const engineWrap = this.room as RoomWithEngine;
-
-			if (!engineWrap?.engine?.client?.rtt) {
+			const webrtcRtt = this.voiceStats.rtt > 0 ? this.voiceStats.rtt : null;
+			const signalRtt = engineWrap?.engine?.client?.rtt ? Math.round(engineWrap.engine.client.rtt) : null;
+			const rtt = webrtcRtt ?? signalRtt;
+			if (rtt === null) {
 				logger.debug('No RTT available', {
 					hasEngine: !!engineWrap?.engine,
 					hasClient: !!engineWrap?.engine?.client,
+					hasWebRtcRtt: webrtcRtt !== null,
 				});
 				return;
 			}
-
-			const rtt = Math.round(engineWrap.engine.client.rtt);
-			logger.debug('RTT measured', {rtt});
+			const source = webrtcRtt !== null ? 'webrtc' : 'signal';
+			logger.debug('RTT measured', {rtt, source});
 
 			logger.debug('Updating latency state', {rtt});
 			const timestamp = Date.now();
@@ -168,11 +181,40 @@ export class VoiceStatsManager {
 				}
 
 				this.currentLatency = rtt;
+				this.currentLatencySource = source;
 				this.averageLatency = this.latencyHistory.length
 					? Math.round(this.latencyHistory.reduce((a, b) => a + b.latency, 0) / this.latencyHistory.length)
 					: null;
 			});
 		}, LATENCY_UPDATE_INTERVAL_MS);
+	}
+
+	private resolveRemoteCandidateEndpoint(
+		pairReport: RTCStatsReport,
+		stats: {get: (id: string) => unknown},
+	): string | null {
+		if (!pairReport.remoteCandidateId) {
+			return null;
+		}
+
+		const remoteCandidate = stats.get(pairReport.remoteCandidateId) as RTCStatsReport | undefined;
+		if (!remoteCandidate) {
+			return null;
+		}
+
+		const host = remoteCandidate.address ?? remoteCandidate.ip;
+		if (!host) {
+			return null;
+		}
+
+		const port = typeof remoteCandidate.port === 'number' ? remoteCandidate.port : null;
+		const protocol = remoteCandidate.protocol ? `/${remoteCandidate.protocol.toLowerCase()}` : '';
+		const candidateType = remoteCandidate.candidateType ? ` (${remoteCandidate.candidateType})` : '';
+		return `${port !== null ? `${host}:${port}` : host}${protocol}${candidateType}`;
+	}
+
+	private shouldPreferCandidatePair(report: RTCStatsReport): boolean {
+		return report.state === 'succeeded' && (report.nominated === true || report.selected === true);
 	}
 
 	stopLatencyTracking(): void {
@@ -206,6 +248,7 @@ export class VoiceStatsManager {
 				let videoPacketLoss = 0;
 				let rtt = 0;
 				let jitter = 0;
+				let mediaEndpoint: string | null = null;
 				let audioRecvCount = 0;
 				let videoRecvCount = 0;
 
@@ -228,8 +271,13 @@ export class VoiceStatsManager {
 							}
 							await voiceStatsDB.set(id, current, now);
 						} else if (report.type === 'candidate-pair' && (report as RTCStatsReport).state === 'succeeded') {
-							const crt = (report as RTCStatsReport).currentRoundTripTime;
+							const pairReport = report as RTCStatsReport;
+							const crt = pairReport.currentRoundTripTime;
 							if (crt) rtt = Math.max(rtt, crt * 1000);
+							const endpoint = this.resolveRemoteCandidateEndpoint(pairReport, stats as {get: (id: string) => unknown});
+							if (endpoint && (this.shouldPreferCandidatePair(pairReport) || mediaEndpoint === null)) {
+								mediaEndpoint = endpoint;
+							}
 						}
 					}
 				}
@@ -268,8 +316,13 @@ export class VoiceStatsManager {
 								else if (kind === 'video') videoPacketLoss += loss;
 							}
 						} else if (report.type === 'candidate-pair' && (report as RTCStatsReport).state === 'succeeded') {
-							const crt = (report as RTCStatsReport).currentRoundTripTime;
+							const pairReport = report as RTCStatsReport;
+							const crt = pairReport.currentRoundTripTime;
 							if (crt) rtt = Math.max(rtt, crt * 1000);
+							const endpoint = this.resolveRemoteCandidateEndpoint(pairReport, stats as {get: (id: string) => unknown});
+							if (endpoint && (this.shouldPreferCandidatePair(pairReport) || mediaEndpoint === null)) {
+								mediaEndpoint = endpoint;
+							}
 						}
 					}
 				}
@@ -299,6 +352,7 @@ export class VoiceStatsManager {
 
 				runInAction(() => {
 					this.voiceStats = stats;
+					this.currentMediaEndpoint = mediaEndpoint;
 				});
 			} catch (error) {
 				logger.debug('Error collecting stats', error);
@@ -333,6 +387,8 @@ export class VoiceStatsManager {
 		this.room = null;
 		this.currentLatency = null;
 		this.averageLatency = null;
+		this.currentLatencySource = null;
+		this.currentMediaEndpoint = null;
 		this.latencyHistory = [];
 		this.voiceStats = initialVoiceStats;
 		this.connectionStartTime = null;
@@ -341,6 +397,8 @@ export class VoiceStatsManager {
 	reset(): void {
 		this.currentLatency = null;
 		this.averageLatency = null;
+		this.currentLatencySource = null;
+		this.currentMediaEndpoint = null;
 		this.latencyHistory = [];
 		this.voiceStats = initialVoiceStats;
 	}

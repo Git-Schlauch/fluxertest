@@ -44,6 +44,20 @@
 	text-decoration: underline;
 }
 
+.profileEffectContainer {
+	overflow: hidden;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 10px;
+	background: var(--background-secondary);
+}
+
+.profileEffectMedia {
+	display: block;
+	width: 100%;
+	max-height: 170px;
+	object-fit: cover;
+}
+
 .membershipContainer {
 	display: flex;
 	flex-direction: column;
