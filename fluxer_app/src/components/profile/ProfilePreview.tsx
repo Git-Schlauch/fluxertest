@@ -22,7 +22,7 @@ import {modal} from '@app/actions/ModalActionCreators';
 import {CustomStatusDisplay} from '@app/components/common/custom_status_display/CustomStatusDisplay';
 import {UserProfileModal} from '@app/components/modals/UserProfileModal';
 import {UserProfileBadges} from '@app/components/popouts/UserProfileBadges';
-import {UserProfileEffectMedia, UserProfileMembershipInfo, UserProfilePreviewBio} from '@app/components/popouts/UserProfileShared';
+import {UserProfileMembershipInfo, UserProfilePreviewBio} from '@app/components/popouts/UserProfileShared';
 import styles from '@app/components/profile/ProfilePreview.module.css';
 import {ProfileCardBanner} from '@app/components/profile/profile_card/ProfileCardBanner';
 import {ProfileCardContent} from '@app/components/profile/profile_card/ProfileCardContent';
@@ -246,7 +246,11 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 					aria-label={t`Profile preview (press Enter to open full preview)`}
 					onKeyDown={handlePreviewKeyDown}
 				>
-					<ProfileCardLayout borderColor={borderColor} showPreviewLabel={showPreviewLabel}>
+					<ProfileCardLayout
+						borderColor={borderColor}
+						profileEffectUrl={finalProfileEffectUrl}
+						showPreviewLabel={showPreviewLabel}
+					>
 						<ProfileCardBanner
 							bannerUrl={finalBannerUrl}
 							bannerColor={bannerColor}
@@ -279,7 +283,6 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 									alwaysAnimate={shouldAutoplayProfileAnimations}
 								/>
 							</div>
-							<UserProfileEffectMedia mediaUrl={finalProfileEffectUrl} />
 							<UserProfilePreviewBio profile={mockProfile} onShowMore={openMockProfile} />
 							{showMembershipInfo && (
 								<UserProfileMembershipInfo

@@ -32,9 +32,44 @@
 	flex-direction: column;
 	gap: 4px;
 	overflow: hidden;
+	isolation: isolate;
 	border-radius: 0.375rem;
 	border-style: solid;
 	border-width: 2.5px;
 	background-color: var(--background-primary);
 	padding-bottom: 0.75rem;
+}
+
+.profileCardWithEffect {
+	background-color: var(--background-primary);
+}
+
+.profileEffectBackground {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+.profileEffectOverlay {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background:
+		linear-gradient(
+			to bottom,
+			rgb(0 0 0 / 0.4) 0%,
+			rgb(0 0 0 / 0.58) 18%,
+			rgb(0 0 0 / 0.66) 45%,
+			rgb(0 0 0 / 0.78) 100%
+		);
+}
+
+.profileCard > :not(.profileEffectBackground):not(.profileEffectOverlay) {
+	position: relative;
+	z-index: 2;
 }

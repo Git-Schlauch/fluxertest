@@ -22,6 +22,7 @@ import http from '@app/lib/HttpClient';
 import {Logger} from '@app/lib/Logger';
 import MessageStore from '@app/stores/MessageStore';
 import SudoStore from '@app/stores/SudoStore';
+import UserStore from '@app/stores/UserStore';
 import type {SudoVerificationPayload} from '@app/types/Sudo';
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
@@ -98,6 +99,7 @@ export async function update(
 		logger.debug('Updating current user profile');
 		const response = await http.patch<UserPrivate & {token?: string}>(Endpoints.USER_ME, user);
 		const userData = response.body;
+		UserStore.handleUserUpdate(userData);
 		logger.debug('Successfully updated user profile');
 		const updatedFields = Object.keys(user).filter((key) => key !== 'new_password');
 		if (updatedFields.length > 0) {

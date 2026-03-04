@@ -96,7 +96,6 @@ import {
 	isTrackReference,
 	TrackRefContext,
 	type TrackReferenceOrPlaceholder,
-	useIsSpeaking,
 	useParticipantTile,
 	VideoTrack,
 } from '@livekit/components-react';
@@ -756,7 +755,17 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const currentUser = UserStore.getCurrentUser();
 	const isCurrentUser = currentUser?.id === participantUser?.id;
 
-	const isSpeaking = useIsSpeaking(participant);
+	const [isSpeaking, setIsSpeaking] = useState(Boolean(participant.isSpeaking));
+	useEffect(() => {
+		setIsSpeaking(Boolean(participant.isSpeaking));
+		const handleSpeakingChanged = (speaking: boolean) => {
+			setIsSpeaking(Boolean(speaking));
+		};
+		participant.on(ParticipantEvent.IsSpeakingChanged, handleSpeakingChanged);
+		return () => {
+			participant.off(ParticipantEvent.IsSpeakingChanged, handleSpeakingChanged);
+		};
+	}, [participant]);
 
 	const voiceState = MediaEngineStore.getVoiceStateByConnectionId(connectionId);
 	const connectionParticipant = MediaEngineStore.getParticipantByUserIdAndConnectionId(userId, connectionId);

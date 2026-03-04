@@ -31,7 +31,6 @@ import {UserProfileDataWarning} from '@app/components/popouts/UserProfileDataWar
 import styles from '@app/components/popouts/UserProfilePopout.module.css';
 import {
 	UserProfileConnections,
-	UserProfileEffectMedia,
 	UserProfileMembershipInfo,
 	UserProfilePreviewBio,
 	UserProfileRoles,
@@ -251,7 +250,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 		return (
 			<FocusRingScope containerRef={popoutContainerRef}>
 				<div ref={popoutContainerRef}>
-					<ProfileCardLayout borderColor={borderColor} hoverRef={hoverRef}>
+					<ProfileCardLayout borderColor={borderColor} profileEffectUrl={profileEffectUrl} hoverRef={hoverRef}>
 						<ProfileCardBanner
 							bannerUrl={bannerUrl as string | null}
 							bannerColor={bannerColor}
@@ -302,7 +301,6 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 								</div>
 							)}
 							{!isWebhook && <VoiceActivitySection userId={user.id} onNavigate={handleClosePopout} />}
-							<UserProfileEffectMedia mediaUrl={profileEffectUrl} />
 							{profile && (
 								<UserProfilePreviewBio
 									profile={profile}

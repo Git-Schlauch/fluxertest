@@ -388,6 +388,17 @@ export const UserAreaPopout = observer(() => {
 			MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT,
 		) as string | null;
 	}, [profileContext, shouldAutoplayProfileAnimations]);
+	const profileEffectUrl = useMemo(() => {
+		if (!profileContext) {
+			return null;
+		}
+		return ProfileDisplayUtils.getProfileEffectUrl(
+			profileContext,
+			undefined,
+			shouldAutoplayProfileAnimations,
+			MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT,
+		) as string | null;
+	}, [profileContext, shouldAutoplayProfileAnimations]);
 
 	const accentColor = getUserAccentColor(currentUser, profileData?.accent_color);
 	const borderColor = accentColor;
@@ -406,7 +417,7 @@ export const UserAreaPopout = observer(() => {
 	return (
 		<FocusRingScope containerRef={popoutContainerRef}>
 			<div ref={popoutContainerRef} className={styles.container}>
-				<ProfileCardLayout borderColor={borderColor}>
+				<ProfileCardLayout borderColor={borderColor} profileEffectUrl={profileEffectUrl}>
 					<ProfileCardBanner
 						bannerUrl={bannerUrl}
 						bannerColor={bannerColor}
