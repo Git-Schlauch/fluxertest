@@ -26,6 +26,7 @@ function getRouteFromPath(path: string): string | null {
 	if (path.startsWith('/avatars/')) return 'avatars';
 	if (path.startsWith('/icons/')) return 'icons';
 	if (path.startsWith('/banners/')) return 'banners';
+	if (path.startsWith('/profile-effects/')) return 'profile_effects';
 	if (path.startsWith('/emojis/')) return 'emojis';
 	if (path.startsWith('/stickers/')) return 'stickers';
 	if (path.startsWith('/attachments/')) return 'attachments';
