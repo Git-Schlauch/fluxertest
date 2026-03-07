@@ -21,6 +21,7 @@
 /** @jsxImportSource hono/jsx */
 
 import {purgeAssets} from '@fluxer/admin/src/api/Assets';
+import {hasAnyPermission} from '@fluxer/admin/src/AccessControlList';
 import {
 	addSnowflakeReservation,
 	deleteSnowflakeReservation,
@@ -36,6 +37,7 @@ import {AuditLogsPage} from '@fluxer/admin/src/pages/AuditLogsPage';
 import {GatewayPage} from '@fluxer/admin/src/pages/GatewayPage';
 import {InstanceConfigPage} from '@fluxer/admin/src/pages/InstanceConfigPage';
 import {LimitConfigPage} from '@fluxer/admin/src/pages/LimitConfigPage';
+import {DashboardPage} from '@fluxer/admin/src/pages/DashboardPage';
 import {SearchIndexPage} from '@fluxer/admin/src/pages/SearchIndexPage';
 import {StrangePlacePage} from '@fluxer/admin/src/pages/StrangePlacePage';
 import {getRouteContext} from '@fluxer/admin/src/routes/RouteContext';
@@ -51,6 +53,7 @@ import {
 	RefreshSearchIndexRequest,
 	ReloadGuildsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {Hono} from 'hono';
 
 function trimToUndefined(value: string | undefined): string | undefined {
@@ -101,7 +104,23 @@ export function createSystemRoutes({config, assetVersion, requireAuth}: RouteFac
 	}
 
 	router.get('/dashboard', requireAuth, async (c) => {
-		return c.redirect(getLandingPath(c));
+		const {session, currentAdmin, flash, csrfToken, adminAcls} = getRouteContext(c);
+		if (!hasAnyPermission(adminAcls, [AdminACLs.USER_LOOKUP, AdminACLs.GUILD_LOOKUP, AdminACLs.AUDIT_LOG_VIEW])) {
+			return c.redirect(getLandingPath(c));
+		}
+		const pageConfig = getPageConfig(c, config);
+
+		const page = await DashboardPage({
+			config: pageConfig,
+			session,
+			currentAdmin,
+			flash,
+			assetVersion,
+			csrfToken,
+			adminAcls,
+		});
+
+		return c.html(page ?? '');
 	});
 
 	router.get('/', requireAuth, async (c) => {

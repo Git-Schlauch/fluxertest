@@ -61,10 +61,11 @@ export async function searchUsers(
 ): Promise<ApiResult<UserSearchResult>> {
 	const client = new ApiClient(config, session);
 	const offset = Math.max(0, page) * limit;
+	const normalizedQuery = query.trim();
 	const result = await client.post<{users: Array<UserAdminResponse>; total: number}>('/admin/users/search', {
-		query,
 		limit,
 		offset,
+		...(normalizedQuery !== '' ? {query: normalizedQuery} : {}),
 	});
 
 	if (result.ok) {

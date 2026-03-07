@@ -173,7 +173,12 @@ export async function searchGuilds(
 	offset: number = 0,
 ): Promise<ApiResult<z.infer<typeof SearchGuildsResponse>>> {
 	const client = new ApiClient(config, session);
-	return client.post<z.infer<typeof SearchGuildsResponse>>('/admin/guilds/search', {query, limit, offset});
+	const normalizedQuery = query.trim();
+	return client.post<z.infer<typeof SearchGuildsResponse>>('/admin/guilds/search', {
+		...(normalizedQuery !== '' ? {query: normalizedQuery} : {}),
+		limit,
+		offset,
+	});
 }
 
 export async function listGuildMembers(

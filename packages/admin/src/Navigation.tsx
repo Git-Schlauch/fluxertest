@@ -27,6 +27,17 @@ import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 export function getSections(): Array<NavSection> {
 	return [
 		{
+			title: 'Overview',
+			items: [
+				{
+					title: 'Dashboard',
+					path: '/dashboard',
+					activeKey: 'dashboard',
+					requiredAcls: [AdminACLs.USER_LOOKUP, AdminACLs.GUILD_LOOKUP, AdminACLs.AUDIT_LOG_VIEW],
+				},
+			],
+		},
+		{
 			title: 'Lookup',
 			items: [
 				{title: 'Users', path: '/users', activeKey: 'users', requiredAcls: [AdminACLs.USER_LOOKUP]},

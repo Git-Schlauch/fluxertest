@@ -73,6 +73,7 @@ export interface SetCameraEnabledOptions {
 
 interface LocalAudioTrackWithVolume {
 	setVolume: (volume: number) => void;
+	isMuted?: boolean;
 }
 
 function isLocalAudioTrackWithVolume(track: unknown): track is LocalAudioTrackWithVolume {
@@ -90,12 +91,14 @@ class VoiceMediaManager {
 	private noiseGateSource: MediaStreamAudioSourceNode | null = null;
 	private noiseGateAnimationFrameId: number | null = null;
 	private noiseGateTrackIdentity: string | null = null;
+	private noiseGateMediaStreamTrack: MediaStreamTrack | null = null;
 	private noiseGateFloatBuffer: Float32Array | null = null;
 	private noiseGateByteBuffer: Uint8Array | null = null;
 	private noiseGateUseFloat = false;
 	private noiseGateOpen = true;
 	private noiseGateLastAboveThresholdAt = 0;
 	private noiseGateLastAppliedVolume = Number.NaN;
+	private noiseGateLastAppliedEnabled: boolean | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -421,14 +424,19 @@ class VoiceMediaManager {
 		if (this.noiseGateAudioContext && this.noiseGateAudioContext.state !== 'closed') {
 			void this.noiseGateAudioContext.close();
 		}
+		if (this.noiseGateMediaStreamTrack && this.noiseGateMediaStreamTrack.readyState !== 'ended') {
+			this.noiseGateMediaStreamTrack.enabled = true;
+		}
 		this.noiseGateAudioContext = null;
 		this.noiseGateTrackIdentity = null;
+		this.noiseGateMediaStreamTrack = null;
 		this.noiseGateFloatBuffer = null;
 		this.noiseGateByteBuffer = null;
 		this.noiseGateUseFloat = false;
 		this.noiseGateOpen = true;
 		this.noiseGateLastAboveThresholdAt = 0;
 		this.noiseGateLastAppliedVolume = Number.NaN;
+		this.noiseGateLastAppliedEnabled = null;
 	}
 
 	private getTrackMediaStreamTrack(track: unknown): MediaStreamTrack | null {
@@ -530,6 +538,7 @@ class VoiceMediaManager {
 			this.noiseGateSource = this.noiseGateAudioContext.createMediaStreamSource(sourceStream);
 			this.noiseGateSource.connect(this.noiseGateAnalyser);
 			this.noiseGateTrackIdentity = trackIdentity;
+			this.noiseGateMediaStreamTrack = mediaStreamTrack;
 
 			const tick = () => {
 				if (mediaStreamTrack.readyState === 'ended') {
@@ -564,6 +573,11 @@ class VoiceMediaManager {
 				if (targetVolume !== this.noiseGateLastAppliedVolume) {
 					localTrack.setVolume(targetVolume);
 					this.noiseGateLastAppliedVolume = targetVolume;
+				}
+				const shouldEnableTrack = isGateOpen || localTrack.isMuted === true;
+				if (shouldEnableTrack !== this.noiseGateLastAppliedEnabled) {
+					mediaStreamTrack.enabled = shouldEnableTrack;
+					this.noiseGateLastAppliedEnabled = shouldEnableTrack;
 				}
 
 				this.noiseGateAnimationFrameId = requestAnimationFrame(tick);

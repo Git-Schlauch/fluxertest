@@ -21,6 +21,7 @@ import type {GuildID, UserID} from '@fluxer/api/src/BrandedTypes';
 import {Config} from '@fluxer/api/src/Config';
 import type {GuildDiscoveryRow} from '@fluxer/api/src/database/types/GuildDiscoveryTypes';
 import {mapGuildToGuildResponse} from '@fluxer/api/src/guild/GuildModel';
+import type {Guild} from '@fluxer/api/src/models/Guild';
 import type {IGuildDiscoveryRepository} from '@fluxer/api/src/guild/repositories/GuildDiscoveryRepository';
 import type {IGuildRepositoryAggregate} from '@fluxer/api/src/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@fluxer/api/src/infrastructure/IGatewayService';
@@ -335,16 +336,20 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		limit: number;
 		offset: number;
 	}): Promise<{guilds: Array<DiscoveryGuildResult>; total: number}> {
+		if (Config.instance.selfHosted) {
+			return this.searchSelfHostedGuilds(params);
+		}
+
 		let guilds: Array<DiscoveryGuildResult>;
 		let total: number;
 
 		if (this.guildSearchService) {
 			const filters: GuildSearchFilters = {
-				isDiscoverable: true,
 				discoveryCategory: params.categoryId,
 				sortBy: 'relevance',
 				sortOrder: 'desc',
 			};
+			filters.isDiscoverable = true;
 
 			const results = await this.guildSearchService.searchGuilds(params.query ?? '', filters, {
 				limit: params.limit,
@@ -355,7 +360,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 				id: hit.id,
 				name: hit.name,
 				icon: hit.iconHash,
-				description: hit.discoveryDescription,
+				description: hit.discoveryDescription ?? null,
 				category_type: hit.discoveryCategory ?? 0,
 				member_count: 0,
 				online_count: 0,
@@ -420,6 +425,90 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		}
 
 		return {guilds, total};
+	}
+
+	private async searchSelfHostedGuilds(params: {
+		query?: string;
+		categoryId?: number;
+		sortBy?: string;
+		limit: number;
+		offset: number;
+	}): Promise<{guilds: Array<DiscoveryGuildResult>; total: number}> {
+		const allGuilds = await this.listAllGuildsPaginated();
+		const normalizedQuery = params.query?.trim().toLowerCase() ?? '';
+
+		const guildResults = await Promise.all(
+			allGuilds.map(async (guild) => {
+				const discoveryRow = await this.discoveryRepository.findByGuildId(guild.id);
+				return {
+					id: guild.id.toString(),
+					name: guild.name,
+					icon: guild.iconHash,
+					description: discoveryRow?.description ?? null,
+					category_type: discoveryRow?.category_type ?? 0,
+					member_count: guild.memberCount,
+					online_count: 0,
+					features: Array.from(guild.features),
+					verification_level: guild.verificationLevel,
+				} satisfies DiscoveryGuildResult;
+			}),
+		);
+
+		const filteredGuilds = guildResults
+			.filter((guild) => {
+				if (params.categoryId !== undefined && guild.category_type !== params.categoryId) {
+					return false;
+				}
+
+				if (normalizedQuery === '') {
+					return true;
+				}
+
+				return (
+					guild.name.toLowerCase().includes(normalizedQuery) ||
+					(guild.description?.toLowerCase().includes(normalizedQuery) ?? false)
+				);
+			})
+			.sort((left, right) => {
+				if (right.member_count !== left.member_count) {
+					return right.member_count - left.member_count;
+				}
+
+				if (left.id === right.id) {
+					return 0;
+				}
+
+				return left.id < right.id ? 1 : -1;
+			});
+
+		return {
+			guilds: filteredGuilds.slice(params.offset, params.offset + params.limit),
+			total: filteredGuilds.length,
+		};
+	}
+
+	private async listAllGuildsPaginated(): Promise<Array<Guild>> {
+		const guilds: Array<Guild> = [];
+		let lastGuildId: GuildID | undefined;
+
+		while (true) {
+			const page = await this.guildRepository.listAllGuildsPaginated(200, lastGuildId);
+			if (page.length === 0) {
+				break;
+			}
+
+			guilds.push(...page);
+			if (page.length < 200) {
+				break;
+			}
+
+			lastGuildId = page[page.length - 1]?.id;
+			if (!lastGuildId) {
+				break;
+			}
+		}
+
+		return guilds;
 	}
 
 	private async addDiscoverableFeature(guildId: GuildID): Promise<void> {

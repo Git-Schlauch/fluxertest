@@ -19,17 +19,25 @@
 
 import {createTestAccount, setUserACLs} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {createGuild, getUserGuilds} from '@fluxer/api/src/guild/tests/GuildTestUtils';
+import {buildAPIConfigFromMaster, initializeConfig, resetConfig} from '@fluxer/api/src/Config';
 import {type ApiTestHarness, createApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
 import {HTTP_STATUS, TEST_IDS} from '@fluxer/api/src/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@fluxer/api/src/test/TestRequestBuilder';
+import {drainSearchTasks} from '@fluxer/api/src/search/SearchTaskTracker';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DiscoveryCategories, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
+import {loadConfig} from '@fluxer/config/src/ConfigLoader';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import type {
 	DiscoveryApplicationResponse,
 	DiscoveryCategoryResponse,
 	DiscoveryGuildListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const testConfigPath = path.resolve(__dirname, '../../../..', 'config/config.test.json');
 
 async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, memberCount: number): Promise<void> {
 	await createBuilder(harness, '')
@@ -238,6 +246,72 @@ describe('Discovery Search and Join', () => {
 				.execute();
 
 			expect(results.guilds.length).toBeLessThanOrEqual(2);
+		});
+
+		test('should list self-hosted guilds even when they are not in discovery', async () => {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Self Hosted Guild');
+			await drainSearchTasks();
+
+			const master = await loadConfig([testConfigPath]);
+			const apiConfig = buildAPIConfigFromMaster(master);
+			resetConfig();
+			initializeConfig({
+				...apiConfig,
+				database: {
+					...apiConfig.database,
+					sqlitePath: ':memory:',
+				},
+				auth: {
+					...apiConfig.auth,
+					passkeys: {
+						...apiConfig.auth.passkeys,
+						rpId: 'localhost',
+						allowedOrigins: ['http://localhost'],
+					},
+				},
+				voice: {
+					...apiConfig.voice,
+					enabled: false,
+				},
+				instance: {
+					...apiConfig.instance,
+					selfHosted: true,
+				},
+			});
+
+			try {
+				const searcher = await createTestAccount(harness);
+				const results = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+					.get('/discovery/guilds')
+					.expect(HTTP_STATUS.OK)
+					.execute();
+
+				const found = results.guilds.find((entry) => entry.id === guild.id);
+				expect(found).toBeDefined();
+				expect(found?.name).toBe('Self Hosted Guild');
+			} finally {
+				resetConfig();
+				initializeConfig({
+					...apiConfig,
+					database: {
+						...apiConfig.database,
+						sqlitePath: ':memory:',
+					},
+					auth: {
+						...apiConfig.auth,
+						passkeys: {
+							...apiConfig.auth.passkeys,
+							rpId: 'localhost',
+							allowedOrigins: ['http://localhost'],
+						},
+					},
+					voice: {
+						...apiConfig.voice,
+						enabled: false,
+					},
+				});
+			}
 		});
 
 		test('should require login to search', async () => {
