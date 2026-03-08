@@ -205,12 +205,16 @@ export function IPTVController(app: HonoApp) {
 			const user = ctx.get('user');
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const data = ctx.req.valid('json');
+			const channelName = data.channel_name;
+			if (!channelName) {
+				throw InputValidationError.create('channel_name', 'channel_name is required');
+			}
 
 			return ctx.json(
 				await ctx.get('iptvService').startFromPlaylist({
 					userId: user.id,
 					channelId,
-					channelName: data.channel_name,
+					channelName,
 					playlist: data.playlist,
 					playlistUrl: data.playlist_url,
 					streamName: data.stream_name,
@@ -405,12 +409,16 @@ export function IPTVController(app: HonoApp) {
 			const user = ctx.get('user');
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const data = ctx.req.valid('json');
+			const channelName = data.channel_name;
+			if (!channelName) {
+				throw InputValidationError.create('channel_name', 'channel_name is required');
+			}
 
 			return ctx.json(
 				await ctx.get('iptvService').startFromConfiguredPlaylist({
 					userId: user.id,
 					channelId,
-					channelName: data.channel_name,
+					channelName,
 					streamName: data.stream_name,
 				}),
 			);

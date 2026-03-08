@@ -661,7 +661,7 @@ export class IPTVService {
 				return null;
 			}
 
-			const guild = createGuildID(parsed.guildId);
+			const guild = createGuildID(BigInt(parsed.guildId));
 			return {
 				guildId: guild,
 				source: parsed.source,
