@@ -91,7 +91,7 @@ export function computeLiveKitPublishSources(permissions: LiveKitPublishPermissi
 	return sources;
 }
 
-function toHttpUrl(wsUrl: string): string {
+export function toHttpUrl(wsUrl: string): string {
 	return wsUrl.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://');
 }
 

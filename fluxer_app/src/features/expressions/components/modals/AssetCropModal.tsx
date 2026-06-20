@@ -50,6 +50,10 @@ const CROP_PROFILE_BANNER_TITLE_DESCRIPTOR = msg({
 	message: 'Crop profile banner',
 	comment: 'Modal title for cropping a profile banner before upload.',
 });
+const CROP_PROFILE_CARD_BACKGROUND_TITLE_DESCRIPTOR = msg({
+	message: 'Crop card background',
+	comment: 'Modal title for cropping a profile card background before upload.',
+});
 const CROP_INVITE_BACKGROUND_TITLE_DESCRIPTOR = msg({
 	message: 'Crop invite background',
 	comment: 'Modal title for cropping an invite background before upload.',
@@ -88,6 +92,12 @@ const PROFILE_BANNER_CROP_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Description in the profile banner crop modal. minimumWidth and minimumHeight are pixel dimensions for the recommended image size.',
 });
+const PROFILE_CARD_BACKGROUND_CROP_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'Drag to reposition your card background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9).',
+	comment:
+		'Description in the profile card background crop modal. minimumWidth and minimumHeight are pixel dimensions for the recommended image size.',
+});
 const INVITE_BACKGROUND_CROP_DESCRIPTION_DESCRIPTOR = msg({
 	message:
 		'Drag to reposition your invite background and use the scroll wheel or pinch to zoom. The recommended minimum size is {minimumWidth}×{minimumHeight} pixels (16:9).',
@@ -122,6 +132,7 @@ export const AssetType = {
 	CHANNEL_ICON: 'channel_icon',
 	GUILD_BANNER: 'guild_banner',
 	PROFILE_BANNER: 'profile_banner',
+	PROFILE_CARD_BACKGROUND: 'profile_card_background',
 	SPLASH: 'splash',
 	EMBED_SPLASH: 'embed_splash',
 } as const;
@@ -188,6 +199,17 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 		minHeight: 240,
 		sizeLimitBytes: 10 * 1024 * 1024,
 	},
+	[AssetType.PROFILE_CARD_BACKGROUND]: {
+		aspectRatio: 16 / 9,
+		cropShape: 'rect',
+		maxWidth: 2048,
+		maxHeight: 1152,
+		minWidth: 960,
+		minHeight: 540,
+		sizeLimitBytes: 10 * 1024 * 1024,
+		minHeightRatio: 0.5,
+		maxHeightRatio: 1,
+	},
 	[AssetType.SPLASH]: {
 		aspectRatio: 16 / 9,
 		cropShape: 'rect',
@@ -239,6 +261,8 @@ const getTitle = (i18n: I18n, assetType: AssetType): string => {
 			return i18n._(CROP_BANNER_TITLE_DESCRIPTOR);
 		case AssetType.PROFILE_BANNER:
 			return i18n._(CROP_PROFILE_BANNER_TITLE_DESCRIPTOR);
+		case AssetType.PROFILE_CARD_BACKGROUND:
+			return i18n._(CROP_PROFILE_CARD_BACKGROUND_TITLE_DESCRIPTOR);
 		case AssetType.SPLASH:
 			return i18n._(CROP_INVITE_BACKGROUND_TITLE_DESCRIPTOR);
 		case AssetType.EMBED_SPLASH:
@@ -259,6 +283,8 @@ const getDescription = (i18n: I18n, assetType: AssetType): string => {
 			return i18n._(BANNER_CROP_DESCRIPTION_DESCRIPTOR, dimensions);
 		case AssetType.PROFILE_BANNER:
 			return i18n._(PROFILE_BANNER_CROP_DESCRIPTION_DESCRIPTOR, dimensions);
+		case AssetType.PROFILE_CARD_BACKGROUND:
+			return i18n._(PROFILE_CARD_BACKGROUND_CROP_DESCRIPTION_DESCRIPTOR, dimensions);
 		case AssetType.SPLASH:
 			return i18n._(INVITE_BACKGROUND_CROP_DESCRIPTION_DESCRIPTOR, dimensions);
 		case AssetType.EMBED_SPLASH:
@@ -275,6 +301,7 @@ const getSaveButtonLabel = (i18n: I18n, assetType: AssetType): string => {
 		case AssetType.GUILD_BANNER:
 		case AssetType.PROFILE_BANNER:
 			return i18n._(SAVE_BANNER_DESCRIPTOR);
+		case AssetType.PROFILE_CARD_BACKGROUND:
 		case AssetType.SPLASH:
 		case AssetType.EMBED_SPLASH:
 			return i18n._(SAVE_BACKGROUND_DESCRIPTOR);
@@ -290,6 +317,7 @@ const getErrorMessage = (i18n: I18n, assetType: AssetType): string => {
 		case AssetType.GUILD_BANNER:
 		case AssetType.PROFILE_BANNER:
 			return i18n._(FAILED_TO_CROP_BANNER_PLEASE_TRY_AGAIN_DESCRIPTOR);
+		case AssetType.PROFILE_CARD_BACKGROUND:
 		case AssetType.SPLASH:
 		case AssetType.EMBED_SPLASH:
 			return i18n._(FAILED_TO_CROP_BACKGROUND_PLEASE_TRY_AGAIN_DESCRIPTOR);

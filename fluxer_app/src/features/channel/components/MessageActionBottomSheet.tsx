@@ -77,6 +77,7 @@ export const MessageActionBottomSheet: React.FC<MessageActionBottomSheetProps> =
 			onClose,
 			onDelete: () => handleDelete(),
 			sourceChannel,
+			linkUrl,
 			onOpenEmojiPicker: handleAddReaction,
 			onOpenReactionsSheet: handleOpenReactionsSheet,
 			quickReactionCount: 4,

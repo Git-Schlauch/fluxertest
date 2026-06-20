@@ -36,6 +36,7 @@ interface ProfileUpdateResult {
 	metadata: UserUpdateMetadata;
 	preparedAvatarUpload: PreparedAssetUpload | null;
 	preparedBannerUpload: PreparedAssetUpload | null;
+	preparedProfileEffectUpload: PreparedAssetUpload | null;
 }
 
 interface UserAccountProfileServiceDeps {
@@ -55,11 +56,13 @@ export class UserAccountProfileService {
 		const updates: UserFieldUpdates = {
 			avatar_hash: user.avatarHash,
 			banner_hash: user.bannerHash,
+			profile_effect_hash: user.profileEffectHash,
 			flags: user.flags,
 		};
 		const metadata: UserUpdateMetadata = {};
 		let preparedAvatarUpload: PreparedAssetUpload | null = null;
 		let preparedBannerUpload: PreparedAssetUpload | null = null;
+		let preparedProfileEffectUpload: PreparedAssetUpload | null = null;
 		if (data.bio !== undefined) {
 			contentModerationService.scanText(data.bio, {
 				userId: user.id,
@@ -104,9 +107,19 @@ export class UserAccountProfileService {
 			try {
 				preparedBannerUpload = await this.processBannerUpdate({user, banner: data.banner, updates});
 			} catch (error) {
-				if (preparedAvatarUpload) {
-					await this.deps.entityAssetService.rollbackAssetUpload(preparedAvatarUpload);
-				}
+				await this.rollbackPreparedUploads(preparedAvatarUpload, preparedBannerUpload);
+				throw error;
+			}
+		}
+		if (data.profile_effect !== undefined) {
+			try {
+				preparedProfileEffectUpload = await this.processProfileEffectUpdate({
+					user,
+					profileEffect: data.profile_effect,
+					updates,
+				});
+			} catch (error) {
+				await this.rollbackPreparedUploads(preparedAvatarUpload, preparedBannerUpload, preparedProfileEffectUpload);
 				throw error;
 			}
 		}
@@ -118,7 +131,7 @@ export class UserAccountProfileService {
 		if (data.mention_flags !== undefined) {
 			updates.mention_flags = data.mention_flags;
 		}
-		return {updates, metadata, preparedAvatarUpload, preparedBannerUpload};
+		return {updates, metadata, preparedAvatarUpload, preparedBannerUpload, preparedProfileEffectUpload};
 	}
 
 	async commitAssetChanges(result: ProfileUpdateResult): Promise<void> {
@@ -134,6 +147,12 @@ export class UserAccountProfileService {
 				deferDeletion: true,
 			});
 		}
+		if (result.preparedProfileEffectUpload) {
+			await this.deps.entityAssetService.commitAssetChange({
+				prepared: result.preparedProfileEffectUpload,
+				deferDeletion: true,
+			});
+		}
 	}
 
 	async rollbackAssetChanges(result: ProfileUpdateResult): Promise<void> {
@@ -142,6 +161,17 @@ export class UserAccountProfileService {
 		}
 		if (result.preparedBannerUpload) {
 			await this.deps.entityAssetService.rollbackAssetUpload(result.preparedBannerUpload);
+		}
+		if (result.preparedProfileEffectUpload) {
+			await this.deps.entityAssetService.rollbackAssetUpload(result.preparedProfileEffectUpload);
+		}
+	}
+
+	private async rollbackPreparedUploads(...preparedUploads: Array<PreparedAssetUpload | null>): Promise<void> {
+		for (const preparedUpload of preparedUploads) {
+			if (preparedUpload) {
+				await this.deps.entityAssetService.rollbackAssetUpload(preparedUpload);
+			}
 		}
 	}
 
@@ -380,6 +410,27 @@ export class UserAccountProfileService {
 		}
 		if (prepared.newHash !== user.bannerHash) {
 			updates.banner_hash = prepared.newHash;
+			return prepared;
+		}
+		return null;
+	}
+
+	private async processProfileEffectUpdate(params: {
+		user: User;
+		profileEffect: string | null;
+		updates: UserFieldUpdates;
+	}): Promise<PreparedAssetUpload | null> {
+		const {user, profileEffect, updates} = params;
+		const prepared = await this.deps.entityAssetService.prepareAssetUpload({
+			assetType: 'profile_effect',
+			entityType: 'user',
+			entityId: user.id,
+			previousHash: user.profileEffectHash,
+			base64Image: profileEffect,
+			errorPath: 'profile_effect',
+		});
+		if (prepared.newHash !== user.profileEffectHash) {
+			updates.profile_effect_hash = prepared.newHash;
 			return prepared;
 		}
 		return null;

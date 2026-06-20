@@ -69,7 +69,9 @@ export function createMockProfile(
 	user: User,
 	options?: {
 		previewBannerUrl?: string | null;
+		previewProfileEffectUrl?: string | null;
 		hasClearedBanner?: boolean;
+		hasClearedProfileEffect?: boolean;
 		previewBio?: string | null;
 		previewPronouns?: string | null;
 		previewAccentColor?: number | null;
@@ -83,6 +85,11 @@ export function createMockProfile(
 			? options.previewBannerUrl
 			: user.banner || null;
 	const finalBio = options?.previewBio !== undefined ? options.previewBio : user.bio || null;
+	const finalProfileEffect = options?.hasClearedProfileEffect
+		? null
+		: options?.previewProfileEffectUrl
+			? options.previewProfileEffectUrl
+			: user.profileEffect || null;
 	const finalPronouns = options?.previewPronouns !== undefined ? options.previewPronouns : user.pronouns || null;
 	const visiblePremiumData = computeVisiblePremiumData(user, options?.previewBadgeSettings);
 	return new Profile({
@@ -90,6 +97,7 @@ export function createMockProfile(
 		user_profile: {
 			bio: finalBio,
 			banner: finalBanner,
+			profile_effect: finalProfileEffect,
 			pronouns: finalPronouns,
 			accent_color: options?.previewAccentColor !== undefined ? options.previewAccentColor : (user.accentColor ?? null),
 		},

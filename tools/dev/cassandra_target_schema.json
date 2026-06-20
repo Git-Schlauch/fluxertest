@@ -8662,6 +8662,10 @@
 					"type": "text"
 				},
 				{
+					"name": "profile_effect_hash",
+					"type": "text"
+				},
+				{
 					"name": "banner_color",
 					"type": "int"
 				},

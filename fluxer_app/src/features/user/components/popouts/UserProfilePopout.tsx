@@ -209,7 +209,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 			);
 			requestClose();
 		};
-		const {profileContext, avatarUrl, hoverAvatarUrl, bannerUrl, hoverBannerUrl, accentColor, profileData} =
+		const {profileContext, avatarUrl, hoverAvatarUrl, bannerUrl, hoverBannerUrl, profileEffectUrl, accentColor, profileData} =
 			useProfileCardDisplayState({
 				user,
 				profile,
@@ -275,6 +275,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 				<div ref={popoutContainerRef} data-flx="user.user-profile-popout.div">
 					<ProfileCardLayout
 						borderColor={borderColor}
+						profileEffectUrl={profileEffectUrl}
 						hoverRef={hoverRef}
 						className={styles.profilePopoutCard}
 						style={PROFILE_POPOUT_GEOMETRY_STYLE}

@@ -112,6 +112,18 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:voice_presence:heartbeat::channel_id::user_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	CHANNEL_IPTV_STATUS: {
+		bucket: 'channel:iptv:status::channel_id::user_id',
+		config: {limit: 30, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_IPTV_START: {
+		bucket: 'channel:iptv:start::channel_id::user_id',
+		config: {limit: 5, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	CHANNEL_IPTV_STOP: {
+		bucket: 'channel:iptv:stop::channel_id::user_id',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	CHANNEL_STREAM_UPDATE: {
 		bucket: 'channel:stream:update::stream_key',
 		config: {limit: 20, windowMs: ms('10 seconds')},

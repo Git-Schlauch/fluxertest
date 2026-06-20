@@ -36,6 +36,7 @@ import {AccentColorPicker} from '@app/features/user/components/modals/tabs/my_pr
 import {AvatarUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader';
 import {BannerUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader';
 import {BioEditor} from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor';
+import {CardBackgroundUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/CardBackgroundUploader';
 import {UsernameSection} from '@app/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection';
 import {PerGuildPremiumUpsell} from '@app/features/user/components/modals/tabs/my_profile_tab/PerGuildPremiumUpsell';
 import {PremiumBadgeSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings';
@@ -193,6 +194,7 @@ function createOptimisticGuildMemberProfile(params: {
 interface FormInputs {
 	avatar?: string | null;
 	banner?: string | null;
+	profile_effect?: string | null;
 	bio: string | null;
 	global_name: string | null;
 	pronouns: string | null;
@@ -211,6 +213,7 @@ interface ProfileRemoteValues {
 	readonly bioMarkdown: string;
 	readonly avatar: ProfileAssetRemoteState;
 	readonly banner: ProfileAssetRemoteState;
+	readonly profileEffect: ProfileAssetRemoteState;
 }
 
 const MY_PROFILE_TAB_ID = 'my_profile';
@@ -237,14 +240,21 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const [bannerAssetSnapshot, setBannerAssetSnapshot] = useState<ProfileAssetCustomizationSnapshot>(
 		createProfileAssetCustomizationSnapshot,
 	);
+	const [profileEffectAssetSnapshot, setProfileEffectAssetSnapshot] = useState<ProfileAssetCustomizationSnapshot>(
+		createProfileAssetCustomizationSnapshot,
+	);
 	const transitionAvatarAsset = useCallback((event: ProfileAssetCustomizationEvent) => {
 		setAvatarAssetSnapshot((snapshot) => transitionProfileAssetCustomizationSnapshot(snapshot, event));
 	}, []);
 	const transitionBannerAsset = useCallback((event: ProfileAssetCustomizationEvent) => {
 		setBannerAssetSnapshot((snapshot) => transitionProfileAssetCustomizationSnapshot(snapshot, event));
 	}, []);
+	const transitionProfileEffectAsset = useCallback((event: ProfileAssetCustomizationEvent) => {
+		setProfileEffectAssetSnapshot((snapshot) => transitionProfileAssetCustomizationSnapshot(snapshot, event));
+	}, []);
 	const avatarAsset = selectProfileAssetCustomizationState(avatarAssetSnapshot);
 	const bannerAsset = selectProfileAssetCustomizationState(bannerAssetSnapshot);
+	const profileEffectAsset = selectProfileAssetCustomizationState(profileEffectAssetSnapshot);
 	const bioTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 	const isPerGuildProfile = selectedGuildId !== null;
 	const profileIdentityKey = user?.id ? `${user.id}:${selectedGuildId ?? 'global'}` : null;
@@ -359,6 +369,10 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	}, [selectedGuildId, user?.id]);
 	const profileRemoteValues: ProfileRemoteValues | null = (() => {
 		if (!user) return null;
+		const profileEffectRemoteState = createGlobalProfileAssetRemoteState({
+			identityKey: user.id ? `${user.id}:profile-effect` : null,
+			hasCustomAsset: Boolean(user.profileEffect),
+		});
 		const commonValues = {
 			timezone: user.timezone ?? null,
 			timezone_privacy_flags: user.timezonePrivacyFlags ?? ProfileFieldPrivacyFlags.EVERYONE,
@@ -395,6 +409,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				bioMarkdown: markdownBio || '',
 				avatar: avatarRemoteState,
 				banner: bannerRemoteState,
+				profileEffect: profileEffectRemoteState,
 			};
 		}
 		const markdownBio = user.bio || null;
@@ -416,6 +431,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				identityKey: profileIdentityKey,
 				hasCustomAsset: Boolean(user.banner),
 			}),
+			profileEffect: profileEffectRemoteState,
 		};
 	})();
 	const applyProfileRemoteValues = useCallback(
@@ -423,14 +439,17 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			originalBioFormValueRef.current = remoteValues.formValues.bio;
 			transitionAvatarAsset(createProfileAssetEventFromRemote(remoteValues.avatar, reason));
 			transitionBannerAsset(createProfileAssetEventFromRemote(remoteValues.banner, reason));
+			transitionProfileEffectAsset(createProfileAssetEventFromRemote(remoteValues.profileEffect, reason));
 			setIsBioInitialized(false);
 			updateBioFromMarkdown(remoteValues.bioMarkdown);
 			setIsBioInitialized(true);
 		},
-		[transitionAvatarAsset, transitionBannerAsset, updateBioFromMarkdown],
+		[transitionAvatarAsset, transitionBannerAsset, transitionProfileEffectAsset, updateBioFromMarkdown],
 	);
 	const isFormDirty = form.formState.isDirty;
-	const hasLocalProfileChanges = Boolean(isFormDirty || avatarAsset.isDirty || bannerAsset.isDirty);
+	const hasLocalProfileChanges = Boolean(
+		isFormDirty || avatarAsset.isDirty || bannerAsset.isDirty || (!isPerGuildProfile && profileEffectAsset.isDirty),
+	);
 	const hasUnsavedChanges = !isProfileCustomizationLocked && hasLocalProfileChanges;
 	const {resetToRemoteValues: resetProfileToRemoteValues, commitRemoteValues: commitProfileRemoteValues} =
 		useRemoteFormReset<FormInputs, ProfileRemoteValues>({
@@ -447,6 +466,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			assets: {
 				avatar: ProfileAssetRemoteState;
 				banner: ProfileAssetRemoteState;
+				profileEffect: ProfileAssetRemoteState;
 			},
 		) => {
 			const remoteValues: ProfileRemoteValues = {
@@ -454,6 +474,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				bioMarkdown: formValues.bio || '',
 				avatar: assets.avatar,
 				banner: assets.banner,
+				profileEffect: assets.profileEffect,
 			};
 			commitProfileRemoteValues(remoteValues);
 		},
@@ -498,7 +519,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
-			if (isProfileCustomizationLocked) {
+			if (isProfileCustomizationLocked || !user) {
 				return;
 			}
 			if (isPerGuildProfile && selectedGuildId && user) {
@@ -570,7 +591,14 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 						premium_badge_masked: user.premiumBadgeMasked ?? false,
 						premium_badge_sequence_hidden: user.premiumBadgeSequenceHidden ?? false,
 					},
-					{avatar: savedAvatar, banner: savedBanner},
+					{
+						avatar: savedAvatar,
+						banner: savedBanner,
+						profileEffect: createGlobalProfileAssetRemoteState({
+							identityKey: user.id ? `${user.id}:profile-effect` : null,
+							hasCustomAsset: Boolean(user.profileEffect),
+						}),
+					},
 				);
 				ToastCommands.createToast({type: 'success', children: i18n._(COMMUNITY_PROFILE_UPDATED_DESCRIPTOR)});
 			} else {
@@ -582,6 +610,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				};
 				assignProfileAssetUploadPatch(updateData, 'avatar', avatarAsset);
 				assignProfileAssetUploadPatch(updateData, 'banner', bannerAsset);
+				assignProfileAssetUploadPatch(updateData, 'profile_effect', profileEffectAsset);
 				if (hasProfileTimezoneAccess) {
 					updateData.timezone = data.timezone;
 					updateData.timezone_privacy_flags = data.timezone_privacy_flags;
@@ -627,6 +656,10 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 							identityKey: profileIdentityKey,
 							hasCustomAsset: Boolean(newUser.banner),
 						}),
+						profileEffect: createGlobalProfileAssetRemoteState({
+							identityKey: user.id ? `${user.id}:profile-effect` : null,
+							hasCustomAsset: Boolean(newUser.profile_effect),
+						}),
 					},
 				);
 				ToastCommands.createToast({type: 'success', children: i18n._(PROFILE_UPDATED_DESCRIPTOR)});
@@ -642,6 +675,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			activeProfileData,
 			avatarAsset,
 			bannerAsset,
+			profileEffectAsset,
 			profileIdentityKey,
 		],
 	);
@@ -686,6 +720,18 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		form.setValue('banner', null);
 		transitionBannerAsset({type: 'asset.cleared'});
 	}, [form, transitionBannerAsset]);
+	const handleProfileEffectChange = useCallback(
+		(base64: string) => {
+			form.setValue('profile_effect', base64);
+			transitionProfileEffectAsset({type: 'asset.uploaded', previewUrl: base64});
+			form.clearErrors('profile_effect');
+		},
+		[form, transitionProfileEffectAsset],
+	);
+	const handleProfileEffectClear = useCallback(() => {
+		form.setValue('profile_effect', null);
+		transitionProfileEffectAsset({type: 'asset.cleared'});
+	}, [form, transitionProfileEffectAsset]);
 	const handleAvatarModeChange = useCallback(
 		(mode: ProfileAssetMode) => {
 			transitionAvatarAsset({type: 'asset.modeSelected', mode});
@@ -745,6 +791,10 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const hasBanner =
 		!bannerAsset.hasCleared &&
 		(bannerAsset.hasAsset || (!bannerAsset.isDirty && Boolean(profileRemoteValues?.banner.hasCustomAsset)));
+	const hasProfileEffect =
+		!profileEffectAsset.hasCleared &&
+		(profileEffectAsset.hasAsset ||
+			(!profileEffectAsset.isDirty && Boolean(profileRemoteValues?.profileEffect.hasCustomAsset)));
 	const profileFallbackDisplayName = NicknameUtils.getDisplayName(user);
 	const watchedTimezone = hasProfileTimezoneAccess ? (form.watch('timezone') ?? null) : null;
 	const watchedTimezonePrivacyFlags = hasProfileTimezoneAccess
@@ -923,6 +973,18 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											data-flx="user.my-profile-tab.my-profile-tab-component.banner-uploader"
 										/>
 									</div>
+									{!isPerGuildProfile && (
+										<div data-flx="user.my-profile-tab.my-profile-tab-component.div--profile-effect">
+											<CardBackgroundUploader
+												hasBackground={hasProfileEffect}
+												onBackgroundChange={handleProfileEffectChange}
+												onBackgroundClear={handleProfileEffectClear}
+												disabled={isProfileCustomizationLocked}
+												errorMessage={form.formState.errors.profile_effect?.message}
+												data-flx="user.my-profile-tab.my-profile-tab-component.card-background-uploader"
+											/>
+										</div>
+									)}
 									<div
 										className={isPerGuildProfile && !hasPerGuildProfiles ? styles.opacityHalf : ''}
 										data-flx="user.my-profile-tab.my-profile-tab-component.opacity-half"
@@ -982,8 +1044,10 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 										user={user}
 										previewAvatarUrl={avatarAsset.previewUrl}
 										previewBannerUrl={bannerAsset.previewUrl}
+										previewProfileEffectUrl={profileEffectAsset.previewUrl}
 										hasClearedAvatar={avatarAsset.hasCleared}
 										hasClearedBanner={bannerAsset.hasCleared}
+										hasClearedProfileEffect={profileEffectAsset.hasCleared}
 										previewBio={actualBio}
 										previewPronouns={form.watch('pronouns')}
 										previewAccentColor={form.watch('accent_color')}

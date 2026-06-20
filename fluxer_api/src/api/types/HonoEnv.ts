@@ -18,6 +18,7 @@ import type {IChannelRepository} from '../channel/IChannelRepository';
 import type {ChannelRequestService} from '../channel/services/ChannelRequestService';
 import type {ChannelService} from '../channel/services/ChannelService';
 import type {MessageRequestService} from '../channel/services/message/MessageRequestService';
+import type {IPTVService} from '../channel/services/IPTVService';
 import type {ScheduledMessageService} from '../channel/services/ScheduledMessageService';
 import type {StreamPreviewService} from '../channel/services/StreamPreviewService';
 import type {StreamService} from '../channel/services/StreamService';
@@ -128,6 +129,7 @@ export interface HonoEnv {
 		downloadService: DownloadService;
 		streamPreviewService: StreamPreviewService;
 		streamService: StreamService;
+		iptvService: IPTVService;
 		emailService: IEmailService;
 		emailChangeService: EmailChangeService;
 		passwordChangeService: PasswordChangeService;

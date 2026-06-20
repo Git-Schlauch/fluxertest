@@ -22,12 +22,13 @@ import type {IMediaService, MediaProxyMetadataResponse} from './IMediaService';
 import type {IStorageService} from './IStorageService';
 import {stripNonJpegImageMetadata} from './StorageObjectHelpers';
 
-type AssetType = 'avatar' | 'banner' | 'icon' | 'splash' | 'embed_splash' | 'branding';
+type AssetType = 'avatar' | 'banner' | 'profile_effect' | 'icon' | 'splash' | 'embed_splash' | 'branding';
 type EntityType = 'user' | 'guild' | 'guild_member' | 'instance';
 
 const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	avatar: 'avatars',
 	banner: 'banners',
+	profile_effect: 'profile-effects',
 	icon: 'icons',
 	splash: 'splashes',
 	embed_splash: 'embed-splashes',
@@ -95,6 +96,7 @@ export class EntityAssetService {
 			case 'icon':
 				return 'guild_icon';
 			case 'banner':
+			case 'profile_effect':
 				return 'banner';
 			case 'splash':
 				return 'splash';

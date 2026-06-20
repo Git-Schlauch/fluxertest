@@ -17,6 +17,7 @@ import {SsoService} from '../auth/services/SsoService';
 import {Config} from '../Config';
 import {createApiContext} from '../CreateApiContext';
 import {ChannelRequestService} from '../channel/services/ChannelRequestService';
+import {IPTVService} from '../channel/services/IPTVService';
 import {MessageRequestService} from '../channel/services/message/MessageRequestService';
 import {createMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
 import {ScheduledMessageService} from '../channel/services/ScheduledMessageService';
@@ -621,6 +622,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	ctx.set('blueskyOAuthService', blueskyOAuthService);
 	ctx.set('streamPreviewService', getStreamPreviewService());
 	ctx.set('streamService', new StreamService(cacheService, channelService, gatewayService, getStreamPreviewService()));
+	ctx.set('iptvService', new IPTVService(channelRepository, gatewayService, liveKitService, voiceRoomStore, kvClient));
 	ctx.set('downloadService', getDownloadService());
 	ctx.set('desktopHandoffService', desktopHandoffService);
 	ctx.set('emailService', emailService);

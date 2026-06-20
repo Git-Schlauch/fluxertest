@@ -36,6 +36,7 @@ export interface UserRow {
 	avatar_color: Nullish<number>;
 	banner_hash: Nullish<string>;
 	banner_color: Nullish<number>;
+	profile_effect_hash?: Nullish<string>;
 	bio: Nullish<string>;
 	pronouns: Nullish<string>;
 	accent_color: Nullish<number>;
@@ -99,6 +100,7 @@ export const USER_COLUMNS = [
 	'avatar_color',
 	'banner_hash',
 	'banner_color',
+	'profile_effect_hash',
 	'bio',
 	'pronouns',
 	'accent_color',
@@ -161,6 +163,7 @@ export const EMPTY_USER_ROW: UserRow = {
 	avatar_color: null,
 	banner_hash: null,
 	banner_color: null,
+	profile_effect_hash: null,
 	bio: null,
 	pronouns: null,
 	accent_color: null,

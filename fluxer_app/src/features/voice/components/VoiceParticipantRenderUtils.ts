@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Users from '@app/features/user/state/Users';
-import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {
+	isIPTVVoiceParticipantIdentity,
+	parseVoiceParticipantIdentity,
+} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {isTrackReference, type TrackReferenceOrPlaceholder} from '@livekit/components-react';
 import type {Participant} from 'livekit-client';
 
 export function isKnownVoiceParticipantIdentity(identity: string): boolean {
+	if (isIPTVVoiceParticipantIdentity(identity)) return true;
 	const {userId, connectionId} = parseVoiceParticipantIdentity(identity);
 	if (!userId || !connectionId) return false;
 	return Boolean(Users.getUser(userId));

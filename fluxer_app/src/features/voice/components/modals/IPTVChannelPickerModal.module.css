@@ -1,0 +1,18 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.errorMessage {
+	margin: var(--spacing-2) 0 0;
+	color: var(--status-danger);
+	font-size: 0.75rem;
+	line-height: 1.4;
+}
+
+.itemStarting {
+	cursor: wait;
+}
+
+.selectedBadge {
+	flex-shrink: 0;
+	color: var(--text-secondary);
+	font-size: 0.75rem;
+}

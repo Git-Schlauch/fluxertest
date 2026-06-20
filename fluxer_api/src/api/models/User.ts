@@ -34,6 +34,7 @@ export class User {
 	readonly avatarColor: number | null;
 	readonly bannerHash: string | null;
 	readonly bannerColor: number | null;
+	readonly profileEffectHash: string | null;
 	readonly bio: string | null;
 	readonly pronouns: string | null;
 	readonly accentColor: number | null;
@@ -96,6 +97,7 @@ export class User {
 		this.avatarColor = row.avatar_color ?? null;
 		this.bannerHash = row.banner_hash ?? null;
 		this.bannerColor = row.banner_color ?? null;
+		this.profileEffectHash = row.profile_effect_hash ?? null;
 		this.bio = row.bio ?? null;
 		this.pronouns = row.pronouns ?? null;
 		this.accentColor = row.accent_color ?? null;
@@ -187,6 +189,7 @@ export class User {
 			avatar_color: this.avatarColor,
 			banner_hash: this.bannerHash,
 			banner_color: this.bannerColor,
+			profile_effect_hash: this.profileEffectHash,
 			bio: this.bio,
 			pronouns: this.pronouns,
 			accent_color: this.accentColor,

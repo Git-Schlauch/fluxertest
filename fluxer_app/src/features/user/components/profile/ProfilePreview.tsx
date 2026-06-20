@@ -50,8 +50,10 @@ interface ProfilePreviewProps {
 	user: User;
 	previewAvatarUrl?: string | null;
 	previewBannerUrl?: string | null;
+	previewProfileEffectUrl?: string | null;
 	hasClearedAvatar?: boolean;
 	hasClearedBanner?: boolean;
+	hasClearedProfileEffect?: boolean;
 	previewBio?: string | null;
 	previewPronouns?: string | null;
 	previewAccentColor?: number | null;
@@ -75,8 +77,10 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		user,
 		previewAvatarUrl,
 		previewBannerUrl,
+		previewProfileEffectUrl,
 		hasClearedAvatar,
 		hasClearedBanner,
+		hasClearedProfileEffect,
 		previewBio,
 		previewPronouns,
 		previewAccentColor,
@@ -99,16 +103,20 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			() => ({
 				previewAvatarUrl,
 				previewBannerUrl,
+				previewProfileEffectUrl,
 				hasClearedAvatar,
 				hasClearedBanner,
+				hasClearedProfileEffect,
 				ignoreGuildAvatar: ignoreGuildAvatarInPreview,
 				ignoreGuildBanner: ignoreGuildBannerInPreview,
 			}),
 			[
 				previewAvatarUrl,
 				previewBannerUrl,
+				previewProfileEffectUrl,
 				hasClearedAvatar,
 				hasClearedBanner,
+				hasClearedProfileEffect,
 				ignoreGuildAvatarInPreview,
 				ignoreGuildBannerInPreview,
 			],
@@ -141,7 +149,9 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			}
 			return createMockProfile(previewUser, {
 				previewBannerUrl,
+				previewProfileEffectUrl,
 				hasClearedBanner,
+				hasClearedProfileEffect,
 				previewBio,
 				previewPronouns,
 				previewAccentColor,
@@ -151,7 +161,9 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		}, [
 			previewUser,
 			previewBannerUrl,
+			previewProfileEffectUrl,
 			hasClearedBanner,
+			hasClearedProfileEffect,
 			previewBio,
 			previewPronouns,
 			previewAccentColor,
@@ -168,6 +180,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			hoverAvatarUrl: finalHoverAvatarUrl,
 			bannerUrl: finalBannerUrl,
 			hoverBannerUrl: finalHoverBannerUrl,
+			profileEffectUrl: finalProfileEffectUrl,
 			accentColor,
 		} = useProfileCardDisplayState({
 			user,
@@ -188,9 +201,11 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 						previewOverrides={{
 							previewAvatarUrl,
 							previewBannerUrl,
+							previewProfileEffectUrl,
 							previewAccentColor,
 							hasClearedAvatar,
 							hasClearedBanner,
+							hasClearedProfileEffect,
 							ignoreGuildAvatar: ignoreGuildAvatarInPreview,
 							ignoreGuildBanner: ignoreGuildBannerInPreview,
 						}}
@@ -205,9 +220,11 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			guildId,
 			previewAvatarUrl,
 			previewBannerUrl,
+			previewProfileEffectUrl,
 			previewAccentColor,
 			hasClearedAvatar,
 			hasClearedBanner,
+			hasClearedProfileEffect,
 			ignoreGuildAvatarInPreview,
 			ignoreGuildBannerInPreview,
 			previewUser,
@@ -237,6 +254,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 				>
 					<ProfileCardLayout
 						borderColor={borderColor}
+						profileEffectUrl={finalProfileEffectUrl}
 						showPreviewLabel={showPreviewLabel}
 						data-flx="user.profile.profile-preview.profile-card-layout"
 					>

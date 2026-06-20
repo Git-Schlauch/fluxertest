@@ -794,6 +794,7 @@ fn parse_standard_asset_path(path: &str) -> Option<ParsedAssetPath> {
         "icons" => AssetKind::GuildIcon,
         "branding" => AssetKind::GuildIcon,
         "banners" => AssetKind::Banner,
+        "profile-effects" => AssetKind::Banner,
         "splashes" => AssetKind::Splash,
         "embed-splashes" => AssetKind::EmbedSplash,
         _ => return None,

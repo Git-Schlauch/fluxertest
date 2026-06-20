@@ -148,6 +148,7 @@ export class User {
 	readonly bio: string | null | undefined;
 	readonly banner: string | null | undefined;
 	readonly bannerColor: number | null | undefined;
+	readonly profileEffect: string | null | undefined;
 	readonly pronouns: string | null | undefined;
 	readonly accentColor: number | null | undefined;
 	readonly timezone: string | null | undefined;
@@ -201,6 +202,7 @@ export class User {
 		this.bio = hasKey(user, 'bio') ? (user.bio ?? null) : undefined;
 		this.banner = hasKey(user, 'banner') ? (user.banner ?? null) : undefined;
 		this.bannerColor = hasKey(user, 'banner_color') ? (user.banner_color ?? null) : undefined;
+		this.profileEffect = hasKey(user, 'profile_effect') ? (user.profile_effect ?? null) : undefined;
 		this.pronouns = hasKey(user, 'pronouns') ? (user.pronouns ?? null) : undefined;
 		this.accentColor = hasKey(user, 'accent_color') ? (user.accent_color ?? null) : undefined;
 		const hasProfileTimezoneAccess = this._isStaff ?? (this.flags & PublicUserFlags.STAFF) !== 0;
@@ -416,6 +418,8 @@ export class User {
 		if (banner !== undefined) result.banner = banner;
 		const bannerColor = pickField(this.bannerColor, u, 'banner_color', opts);
 		if (bannerColor !== undefined) result.banner_color = bannerColor;
+		const profileEffect = pickField(this.profileEffect, u, 'profile_effect', opts);
+		if (profileEffect !== undefined) result.profile_effect = profileEffect;
 		const pronouns = pickField(this.pronouns, u, 'pronouns', opts);
 		if (pronouns !== undefined) result.pronouns = pronouns;
 		const accentColor = pickField(this.accentColor, u, 'accent_color', opts);
@@ -637,6 +641,7 @@ export class User {
 			this.bio === other.bio &&
 			this.banner === other.banner &&
 			this.bannerColor === other.bannerColor &&
+			this.profileEffect === other.profileEffect &&
 			this.pronouns === other.pronouns &&
 			this.accentColor === other.accentColor &&
 			this.timezone === other.timezone &&
@@ -696,6 +701,7 @@ export class User {
 		setOptional('bio', this.bio);
 		setOptional('banner', this.banner);
 		setOptional('banner_color', this.bannerColor);
+		setOptional('profile_effect', this.profileEffect);
 		setOptional('pronouns', this.pronouns);
 		setOptional('accent_color', this.accentColor);
 		if (this.isStaff()) {

@@ -1,6 +1,10 @@
 {$FLUXER_CADDY_SITE_ADDRESS} {
 	encode zstd gzip
 
+	handle /.well-known/fluxer {
+		reverse_proxy api:8080
+	}
+
 	handle_path /api/* {
 		reverse_proxy api:8080
 	}

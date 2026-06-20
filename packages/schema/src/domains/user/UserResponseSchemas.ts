@@ -105,6 +105,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.describe('Bitfield controlling who can see the profile timezone. Omitted unless the user has staff access.'),
 	banner: z.string().nullable().describe('The hash of the user profile banner image'),
 	banner_color: Int32Type.nullable().describe('The default banner color if no custom banner is set'),
+	profile_effect: z.string().nullable().describe('The hash of the user profile card background image'),
 	mfa_enabled: z.boolean().describe('Whether multi-factor authentication is enabled'),
 	authenticator_types: z
 		.array(UserAuthenticatorTypesSchema)
@@ -244,6 +245,7 @@ export interface UserProfileResponse {
 	pronouns: string | null;
 	banner: string | null;
 	banner_color?: number | null;
+	profile_effect?: string | null;
 	accent_color: number | null;
 }
 
@@ -458,6 +460,7 @@ export interface UserProfile {
 	readonly bio: string | null;
 	readonly banner: string | null;
 	readonly banner_color?: number | null;
+	readonly profile_effect?: string | null;
 	readonly pronouns: string | null;
 	readonly accent_color: number | null;
 }
@@ -566,6 +569,7 @@ const UserProfileDataResponse = z.object({
 	pronouns: z.string().nullable().describe('User pronouns'),
 	banner: z.string().nullable().describe('Hash of the profile banner image'),
 	banner_color: Int32Type.nullable().optional().describe('Default banner color if no custom banner'),
+	profile_effect: z.string().nullable().optional().describe('Hash of the profile card background image'),
 	accent_color: Int32Type.nullable().describe('User-selected accent color'),
 });
 

@@ -3,6 +3,7 @@
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
+import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {PRIORITIZE_SPEAKERS_DESCRIPTOR} from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
@@ -16,11 +17,14 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
+import * as IPTVCommands from '@app/features/voice/commands/IPTVCommands';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceDebugEventSinkCommands from '@app/features/voice/commands/VoiceDebugEventSinkCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/CameraPreviewModal';
 import {HideOwnCameraConfirmModal} from '@app/features/voice/components/modals/HideOwnCameraConfirmModal';
+import {IPTVPlaylistConfigModal} from '@app/features/voice/components/modals/IPTVPlaylistConfigModal';
+import {IPTVStartModal} from '@app/features/voice/components/modals/IPTVStartModal';
 import styles from '@app/features/voice/components/VoiceSettingsMenus.module.css';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import CallState from '@app/features/voice/state/CallState';
@@ -49,7 +53,7 @@ import {
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 import {VOICE_VOLUME_MAX_PERCENT} from '@app/features/voice/utils/VoiceVolumeUtils';
-import {AUTOMATIC_VOICE_REGION_ID} from '@fluxer/constants/src/ChannelConstants';
+import {AUTOMATIC_VOICE_REGION_ID, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -59,6 +63,7 @@ import {
 	GridFourIcon,
 	HandTapIcon,
 	MicrophoneIcon,
+	MonitorPlayIcon,
 	SpeakerSimpleSlashIcon,
 	SpeakerSlashIcon,
 	UsersIcon,
@@ -648,16 +653,27 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 	const layoutMode = VoiceCallLayout.layoutMode;
 	const isGrid = layoutMode === 'grid';
 	const connectedChannelId = MediaEngine.channelId;
+	const connectedGuildId = MediaEngine.guildId ?? null;
 	const canControlDebugLogging = connectedChannelId != null && (Users.currentUser?.isStaff() ?? false);
 	const canOpenDebugEventSink =
 		canControlDebugLogging && VoiceDebugEventSinkCommands.canOpenVoiceDebugEventSinkPopout();
 	const isDmVoiceCall = connectedChannelId != null && (MediaEngine.guildId ?? null) === null;
+	const isGuildVoiceCall = connectedChannelId != null && connectedGuildId !== null;
+	const canManageGuild =
+		isGuildVoiceCall && connectedGuildId ? Permission.can(Permissions.MANAGE_GUILD, {guildId: connectedGuildId}) : false;
+	const canManageChannels =
+		isGuildVoiceCall && connectedGuildId
+			? Permission.can(Permissions.MANAGE_CHANNELS, {guildId: connectedGuildId})
+			: false;
+	const canManageIptvPlaylist = canManageGuild || canManageChannels;
 	const currentRegion =
 		isDmVoiceCall && connectedChannelId
 			? (CallState.getCall(connectedChannelId)?.region ?? AUTOMATIC_VOICE_REGION_ID)
 			: null;
 	const [regions, setRegions] = useState<Array<RtcRegionResponse>>([]);
 	const [isChangingRegion, setIsChangingRegion] = useState(false);
+	const [iptvStatus, setIptvStatus] = useState<IPTVCommands.IPTVStatus | null>(null);
+	const [isUpdatingIptv, setIsUpdatingIptv] = useState(false);
 	useEffect(() => {
 		if (!isDmVoiceCall || !connectedChannelId) {
 			setRegions([]);
@@ -680,6 +696,28 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 			cancelled = true;
 		};
 	}, [connectedChannelId, isDmVoiceCall]);
+	useEffect(() => {
+		if (!isGuildVoiceCall || !connectedChannelId) {
+			setIptvStatus(null);
+			return undefined;
+		}
+		let cancelled = false;
+		void IPTVCommands.getIPTVStatus(connectedChannelId)
+			.then((status) => {
+				if (!cancelled) {
+					setIptvStatus(status);
+				}
+			})
+			.catch((error) => {
+				logger.error('Failed to fetch IPTV status for more options menu:', error);
+				if (!cancelled) {
+					setIptvStatus(null);
+				}
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [connectedChannelId, isGuildVoiceCall]);
 	const getRegionDisplayName = useCallback(
 		(regionId: string, regionName: string): string => {
 			if (regionId === AUTOMATIC_VOICE_REGION_ID) {
@@ -724,6 +762,41 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 		},
 		[connectedChannelId, currentRegion, isChangingRegion],
 	);
+	const handleStartIptv = useCallback(() => {
+		if (!connectedChannelId || isUpdatingIptv) {
+			return;
+		}
+		ModalCommands.pushAfterBottomSheetClose(
+			onClose,
+			modal(() => (
+				<IPTVStartModal
+					channelId={connectedChannelId}
+					onStarted={async () => {
+						const status = await IPTVCommands.getIPTVStatus(connectedChannelId);
+						setIptvStatus(status);
+					}}
+				/>
+			)),
+		);
+	}, [connectedChannelId, isUpdatingIptv, onClose]);
+	const handleStopIptv = useCallback(() => {
+		if (!connectedChannelId || isUpdatingIptv) {
+			return;
+		}
+
+		setIsUpdatingIptv(true);
+		void IPTVCommands.stopIPTV(connectedChannelId)
+			.then(async () => {
+				const status = await IPTVCommands.getIPTVStatus(connectedChannelId);
+				setIptvStatus(status);
+			})
+			.catch((error) => {
+				logger.error('Failed to stop IPTV stream from more options menu:', error);
+			})
+			.finally(() => {
+				setIsUpdatingIptv(false);
+			});
+	}, [connectedChannelId, isUpdatingIptv]);
 	return (
 		<>
 			<MenuGroup data-flx="voice.voice-settings-menus.voice-more-options-menu.menu-group">
@@ -764,6 +837,54 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 						)}
 						data-flx="voice.voice-settings-menus.voice-more-options-menu.menu-item-submenu"
 					/>
+				)}
+				{isGuildVoiceCall && (
+					<>
+						<MenuItem
+							icon={
+								<MonitorPlayIcon
+									weight="fill"
+									className={styles.icon}
+									data-flx="voice.voice-settings-menus.voice-more-options-menu.iptv-icon"
+								/>
+							}
+							disabled={isUpdatingIptv}
+							onClick={() => {
+								if (iptvStatus?.active) {
+									handleStopIptv();
+								} else {
+									handleStartIptv();
+								}
+							}}
+							data-flx="voice.voice-settings-menus.voice-more-options-menu.iptv-toggle"
+						>
+							{iptvStatus?.active ? <Trans>Stop IPTV Stream</Trans> : <Trans>Start IPTV Stream</Trans>}
+						</MenuItem>
+						{canManageIptvPlaylist && (
+							<MenuItem
+								icon={
+									<MonitorPlayIcon
+										weight="fill"
+										className={styles.icon}
+										data-flx="voice.voice-settings-menus.voice-more-options-menu.iptv-playlist-icon"
+									/>
+								}
+								disabled={!connectedChannelId}
+								onClick={() => {
+									if (!connectedChannelId) return;
+									ModalCommands.pushAfterBottomSheetClose(
+										onClose,
+										modal(() => (
+											<IPTVPlaylistConfigModal channelId={connectedChannelId} />
+										)),
+									);
+								}}
+								data-flx="voice.voice-settings-menus.voice-more-options-menu.iptv-playlist-settings"
+							>
+								<Trans>IPTV Playlist Settings</Trans>
+							</MenuItem>
+						)}
+					</>
 				)}
 				{!isDmVoiceCall && (
 					<CheckboxItem

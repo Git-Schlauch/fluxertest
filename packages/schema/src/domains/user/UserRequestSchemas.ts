@@ -74,6 +74,9 @@ export const UserUpdateRequest = z
 		banner: createBase64StringType(1, AVATAR_MAX_SIZE * 1.33)
 			.nullish()
 			.describe('Base64-encoded profile banner image'),
+		profile_effect: createBase64StringType(1, AVATAR_MAX_SIZE * 1.33)
+			.nullish()
+			.describe('Base64-encoded profile card background image'),
 		bio: createStringType(1, 320).nullish().describe('User biography text (max 320 characters)'),
 		pronouns: createStringType(1, 40).nullish().describe('User pronouns (max 40 characters)'),
 		accent_color: ColorType.nullish().describe('Profile accent color as integer'),

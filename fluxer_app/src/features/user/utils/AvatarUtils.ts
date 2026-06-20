@@ -25,6 +25,7 @@ export function getDefaultAvatarPrimaryColor(id: string) {
 
 type AvatarOptions = Pick<User, 'id' | 'avatar'>;
 type BannerOptions = Pick<User, 'id' | 'banner'>;
+type ProfileEffectOptions = Pick<User, 'id' | 'profileEffect'>;
 
 interface IconOptions {
 	id: string;
@@ -132,6 +133,24 @@ export function getUserBannerURL({id, banner}: BannerOptions, animated = false, 
 	const {hash, animated: shouldAnimate} = parseMediaHashForRequest(banner, animated);
 	return buildWebpMediaUrl({
 		path: 'banners',
+		id,
+		hash,
+		size,
+		animated: shouldAnimate,
+	});
+}
+
+export function getUserProfileEffectURL(
+	{id, profileEffect}: ProfileEffectOptions,
+	animated = true,
+	size: MediaProxyImageSize = 1024,
+) {
+	if (!profileEffect) {
+		return '';
+	}
+	const {hash, animated: shouldAnimate} = parseMediaHashForRequest(profileEffect, animated);
+	return buildWebpMediaUrl({
+		path: 'profile-effects',
 		id,
 		hash,
 		size,

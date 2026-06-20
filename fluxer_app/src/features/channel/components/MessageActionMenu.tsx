@@ -62,10 +62,14 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import type {MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import UserSettings from '@app/features/user/state/UserSettings';
+import * as WatchTogetherCommands from '@app/features/voice/commands/WatchTogetherCommands';
+import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import {findYouTubeWatchCandidate} from '@app/features/voice/utils/YouTubeWatchTogetherUtils';
 import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
 import {MessageStates, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {MonitorPlayIcon} from '@phosphor-icons/react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
 const MESSAGE_DEBUG_DESCRIPTOR = msg({
@@ -104,6 +108,10 @@ const DEBUG_MESSAGE_DESCRIPTOR = msg({
 	message: 'Debug message',
 	comment: 'Developer-mode message context menu item that opens an internal debug view for the message.',
 });
+const START_WATCH_TOGETHER_DESCRIPTOR = msg({
+	message: 'Start watch together',
+	comment: 'Action label that starts a shared YouTube viewing session for the current voice channel.',
+});
 
 interface MessageActionMenuOptions {
 	onOpenEmojiPicker?: () => void;
@@ -111,6 +119,7 @@ interface MessageActionMenuOptions {
 	onClose?: () => void;
 	onDelete?: (bypassConfirm?: boolean) => void;
 	sourceChannel?: MessagePermissions['channel'] | null;
+	linkUrl?: string | null;
 	quickReactionCount?: number;
 	submenuReactionCount?: number;
 }
@@ -125,6 +134,7 @@ export const messageActionMenuItemIds = {
 	pinMessage: 'message_pin',
 	bookmarkMessage: 'message_bookmark',
 	suppressEmbeds: 'suppress_embeds',
+	watchTogether: 'watch_together',
 	markUnread: 'message_mark_unread',
 	speakMessage: 'message_speak',
 	deleteMessage: 'message_delete',
@@ -157,9 +167,11 @@ export const useMessageActionMenuData = (
 		onClose,
 		onDelete,
 		sourceChannel,
+		linkUrl,
 		quickReactionCount = 5,
 		submenuReactionCount = 16,
 	} = options;
+	useMediaEngineVersion();
 	const permissions = useMessagePermissions(message, sourceChannel);
 	const handlers = useMemo(
 		() => createMessageActionHandlers(message, {i18n, onClose, channel: permissions?.channel ?? sourceChannel}),
@@ -181,6 +193,13 @@ export const useMessageActionMenuData = (
 	const developerMode = UserSettings.developerMode;
 	const effectiveContent = useMemo(() => getEffectiveContent(message), [message]);
 	const copyableMessageText = useMemo(() => getCopyableMessageText(message, i18n), [message, i18n.locale]);
+	const watchTogetherCandidate = useMemo(
+		() => findYouTubeWatchCandidate({linkUrl, text: effectiveContent}),
+		[effectiveContent, linkUrl],
+	);
+	const canStartWatchTogether = Boolean(
+		watchTogetherCandidate && message.isCurrentUserAuthor() && MediaEngine.channelId && MediaEngine.room,
+	);
 	const canManageMessages = useMemo(
 		() =>
 			permissions != null &&
@@ -204,6 +223,15 @@ export const useMessageActionMenuData = (
 	const handleSpeakMessage = useCallback(() => {
 		requestSpeakMessage(message);
 	}, [message]);
+	const handleStartWatchTogether = useCallback(() => {
+		if (!watchTogetherCandidate) return;
+		void WatchTogetherCommands.startFromMessage({
+			message,
+			linkUrl,
+			candidate: watchTogetherCandidate,
+		});
+		onClose?.();
+	}, [linkUrl, message, onClose, watchTogetherCandidate]);
 	const handleReportMessage = useCallback(() => {
 		if (!canReportMessage(message)) {
 			return;
@@ -292,6 +320,20 @@ export const useMessageActionMenuData = (
 					shortcut: (
 						<KeybindHint action="message_forward" data-flx="channel.message-action-menu.groups.keybind-hint--4" />
 					),
+				});
+			}
+			if (canStartWatchTogether && watchTogetherCandidate) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.watchTogether,
+					icon: (
+						<MonitorPlayIcon
+							size={20}
+							weight="fill"
+							data-flx="channel.message-action-menu.groups.watch-together-icon"
+						/>
+					),
+					label: i18n._(START_WATCH_TOGETHER_DESCRIPTOR),
+					onClick: handleStartWatchTogether,
 				});
 			}
 			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots) {
@@ -456,14 +498,17 @@ export const useMessageActionMenuData = (
 		permissions,
 		developerMode,
 		canManageMessages,
+		canStartWatchTogether,
 		supportsInteractiveActions,
 		isSpeaking,
 		voiceReady,
 		effectiveContent,
 		copyableMessageText,
 		handleSpeakMessage,
+		handleStartWatchTogether,
 		handleReportMessage,
 		handleDebugMessage,
+		watchTogetherCandidate,
 		i18n.locale,
 	]);
 	const quickReactionRowVisible =

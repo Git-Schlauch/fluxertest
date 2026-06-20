@@ -3,6 +3,7 @@
 import type {HonoApp} from '../../types/HonoEnv';
 import {CallController} from './CallController';
 import {ChannelController} from './ChannelController';
+import {IPTVController} from './IPTVController';
 import {MessageController} from './MessageController';
 import {MessageInteractionController} from './MessageInteractionController';
 import {ScheduledMessageController} from './ScheduledMessageController';
@@ -16,6 +17,7 @@ export function registerChannelControllers(app: HonoApp) {
 	MessageController(app);
 	ScheduledMessageController(app);
 	CallController(app);
+	IPTVController(app);
 	StreamController(app);
 	VoiceDiagnosticsController(app);
 	VoicePresenceController(app);

@@ -58,6 +58,7 @@ import {
 } from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {IncomingCallManager} from '@app/features/voice/components/IncomingCallManager';
+import {WatchTogetherLayer} from '@app/features/voice/components/WatchTogetherLayer';
 import {VoiceLiveKitRoot} from '@app/features/voice/components/VoiceLiveKitRoot';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {useElectronScreenSharePicker} from '@app/features/voice/hooks/useElectronScreenSharePicker';
@@ -224,6 +225,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 					/>
 					<GlobalOverlays data-flx="app.app.app-wrapper.global-overlays" />
 					<IncomingCallManager data-flx="app.app.app-wrapper.incoming-call-manager" />
+					<WatchTogetherLayer />
 				</div>
 			</VoiceLiveKitRoot>
 		</LayoutVariantProvider>

@@ -36,6 +36,7 @@ const MEDIA_SOURCES: &[&str] = &[
 
 const SCRIPT_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
+    "https://www.youtube.com/iframe_api",
     "https://hcaptcha.com",
     "https://*.hcaptcha.com",
 ];
@@ -280,6 +281,13 @@ mod tests {
         let config = default_csp_config();
         let csp = build_csp(&config, "abc123def456", &runtime_sources());
         assert!(csp.contains("'nonce-abc123def456'"));
+    }
+
+    #[test]
+    fn build_csp_allows_youtube_iframe_api_script() {
+        let config = default_csp_config();
+        let csp = build_csp(&config, "abc123def456", &runtime_sources());
+        assert!(csp.contains("https://www.youtube.com/iframe_api"));
     }
 
     #[test]

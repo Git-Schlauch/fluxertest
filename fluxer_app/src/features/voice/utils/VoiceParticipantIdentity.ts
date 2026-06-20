@@ -13,3 +13,7 @@ export function parseVoiceParticipantIdentity(identity: string): ParsedVoicePart
 export function buildVoiceParticipantIdentity(userId: string, connectionId: string): string {
 	return `user_${userId}_${connectionId}`;
 }
+
+export function isIPTVVoiceParticipantIdentity(identity: string): boolean {
+	return /^iptv_\d+$/.test(identity);
+}

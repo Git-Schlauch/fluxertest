@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Local development override for running this checkout with the upstream
+# self-hosting stack. Keep docker-compose.yml on the release images and layer
+# this file on top when you want the local IPTV/profile branch.
+
+x-local-api-build: &local-api-build
+  context: ../..
+  dockerfile: fluxer_api/Dockerfile
+  args:
+    BUILD_VERSION: local-iptv-profile
+
+services:
+  livekit-ingress:
+    image: livekit/ingress:latest
+    restart: unless-stopped
+    networks: [fluxer]
+    environment:
+      INGRESS_CONFIG_FILE: /etc/ingress/ingress.yaml
+    volumes:
+      - ./livekit-ingress.local.yaml:/etc/ingress/ingress.yaml:ro
+    depends_on:
+      livekit:
+        condition: service_started
+      valkey:
+        condition: service_healthy
+
+  api:
+    image: fluxer-api:local-iptv-profile
+    pull_policy: never
+    environment:
+      FLUXER_IPTV_ENABLE_WHIP: "false"
+      FLUXER_IPTV_INGRESS_RTMP_BASE_URL: rtmp://livekit-ingress:1935/live
+      FLUXER_IPTV_INGRESS_WHIP_BASE_URL: http://livekit-ingress:8080/whip
+      FLUXER_IPTV_INGRESS_VIDEO_CODEC: vp8
+      FLUXER_IPTV_VIDEO_CODEC: libx264
+    depends_on:
+      livekit-ingress:
+        condition: service_started
+    build: *local-api-build
+
+  worker:
+    image: fluxer-api:local-iptv-profile
+    pull_policy: never
+    environment:
+      FLUXER_IPTV_ENABLE_WHIP: "false"
+      FLUXER_IPTV_INGRESS_RTMP_BASE_URL: rtmp://livekit-ingress:1935/live
+      FLUXER_IPTV_INGRESS_WHIP_BASE_URL: http://livekit-ingress:8080/whip
+      FLUXER_IPTV_INGRESS_VIDEO_CODEC: vp8
+      FLUXER_IPTV_VIDEO_CODEC: libx264
+    build: *local-api-build
+
+  media-proxy:
+    image: fluxer-media-proxy:local-iptv-profile
+    pull_policy: never
+    build:
+      context: ../..
+      dockerfile: fluxer_media_proxy/Dockerfile
+      args:
+        BUILD_VERSION: local-iptv-profile
+
+  app-proxy:
+    image: fluxer-app-proxy-self-hosted:local-iptv-profile
+    pull_policy: never
+    environment:
+      FLUXER_SELF_HOSTED: "true"
+      FLUXER_APP_PROXY_TIME_FREEZE_ENABLED: "false"
+    build:
+      context: ../..
+      dockerfile: fluxer_app_proxy/Dockerfile
+      args:
+        BUILD_VERSION: local-iptv-profile
+        PUBLIC_ASSET_BASE_URL: ""

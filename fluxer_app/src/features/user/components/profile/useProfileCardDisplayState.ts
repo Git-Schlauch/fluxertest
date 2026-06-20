@@ -27,6 +27,7 @@ export interface ProfileCardDisplayState {
 	hoverAvatarUrl: string | null;
 	bannerUrl: string | null;
 	hoverBannerUrl: string | null;
+	profileEffectUrl: string | null;
 	accentColor: string;
 	profileData: Readonly<UserProfile> | null;
 }
@@ -60,6 +61,10 @@ export function useProfileCardDisplayState({
 		() => ProfileDisplayUtils.getProfileBannerUrls(profileContext, previewOverrides, resolvedBannerSize),
 		[profileContext, previewOverrides, resolvedBannerSize],
 	);
+	const profileEffectUrl = useMemo(
+		() => ProfileDisplayUtils.getProfileEffectUrl(profileContext, previewOverrides, true, resolvedBannerSize),
+		[profileContext, previewOverrides, resolvedBannerSize],
+	);
 	const profileData = useMemo(() => profile?.getEffectiveProfile() ?? null, [profile]);
 	const accentColor = useMemo(
 		() => getUserAccentColor(accentUser ?? user, profileData?.accent_color),
@@ -71,6 +76,7 @@ export function useProfileCardDisplayState({
 		hoverAvatarUrl: avatarUrls.hoverAvatarUrl,
 		bannerUrl: bannerUrls.bannerUrl,
 		hoverBannerUrl: bannerUrls.hoverBannerUrl,
+		profileEffectUrl,
 		accentColor,
 		profileData,
 	};

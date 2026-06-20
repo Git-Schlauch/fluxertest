@@ -424,6 +424,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 				sourceChannel,
 				onOpenReactionsSheet: handleOpenReactionsModal,
 				onOpenEmojiPicker: handleOpenEmojiPickerAction,
+				linkUrl,
 				quickReactionCount: 4,
 				submenuReactionCount: 16,
 			});
@@ -501,6 +502,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 		const editItem = itemById.get(ids.edit);
 		const replyItem = itemById.get(ids.reply);
 		const forwardItem = itemById.get(ids.forward);
+		const watchTogetherItem = itemById.get(ids.watchTogether);
 		const copyMessageItem = itemById.get(ids.copyMessage);
 		const pinMessageItem = itemById.get(ids.pinMessage);
 		const bookmarkMessageItem = itemById.get(ids.bookmarkMessage);
@@ -588,6 +590,14 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					{editItem && renderDataMenuItem(editItem, 'edit')}
 					{replyItem && renderDataMenuItem(replyItem, 'reply')}
 					{forwardItem && renderDataMenuItem(forwardItem, 'forward')}
+				</MenuGroup>
+			);
+		};
+		const renderWatchTogetherGroup = () => {
+			if (!watchTogetherItem) return null;
+			return (
+				<MenuGroup data-flx="ui.action-menu.message-context-menu.render-watch-together-group.menu-group">
+					{renderDataMenuItem(watchTogetherItem, 'watch-together')}
 				</MenuGroup>
 			);
 		};
@@ -812,6 +822,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					/>
 				)}
 				{renderInteractionGroup()}
+				{renderWatchTogetherGroup()}
 				{renderMediaInlineGroups()}
 				{renderEmbeddedLinkGroup()}
 				{renderUtilityGroup()}
